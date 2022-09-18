@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="RTeoJQ" name="Mutli-Device Player" projectType="guiapp" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="1" jucerFormatVersion="1" version="0.1.0"
+              companyName="Weird Numbers" companyCopyright="Copyright (c) 2022 Anthony Alfimov"
+              companyWebsite="https://github.com/anthonyalfimov" cppLanguageStandard="17">
+  <MAINGROUP id="EFDvI3" name="Mutli-Device Player">
+    <GROUP id="{94E19593-C5BC-CA60-8650-8B71D9FA3D52}" name="Source">
+      <FILE id="I27LPC" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="pLfCVt" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="XXkH9w" name="MainComponent.cpp" compile="1" resource="0"
+            file="Source/MainComponent.cpp"/>
+    </GROUP>
+  </MAINGROUP>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_USE_LAME_AUDIO_FORMAT="1"
+               JUCE_USE_WINDOWS_MEDIA_FORMAT="1" JUCE_USE_FLAC="1" JUCE_USE_OGGVORBIS="1"/>
+  <EXPORTFORMATS>
+    <VS2022 targetFolder="Builds/VisualStudio2022">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Mutli-Device Player"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="Mutli-Device Player"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../libs/JUCE/modules"/>
+      </MODULEPATHS>
+    </VS2022>
+    <XCODE_MAC targetFolder="Builds/MacOSX">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Mutli-Device Player"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="Mutli-Device Player"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../libs/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../libs/JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+  </EXPORTFORMATS>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+</JUCERPROJECT>

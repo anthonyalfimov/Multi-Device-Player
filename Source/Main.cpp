@@ -24,18 +24,18 @@
 #include "MainComponent.h"
 
 //==============================================================================
-class MutliDevicePlayerApplication  : public juce::JUCEApplication
+class MutliDevicePlayerApplication  : public JUCEApplication
 {
 public:
     //==============================================================================
     MutliDevicePlayerApplication() {}
 
-    const juce::String getApplicationName() override       { return ProjectInfo::projectName; }
-    const juce::String getApplicationVersion() override    { return ProjectInfo::versionString; }
-    bool moreThanOneInstanceAllowed() override             { return true; }
+    const String getApplicationName() override { return ProjectInfo::projectName; }
+    const String getApplicationVersion() override { return ProjectInfo::versionString; }
+    bool moreThanOneInstanceAllowed() override { return true; }
 
     //==============================================================================
-    void initialise (const juce::String& commandLine) override
+    void initialise (const String& commandLine) override
     {
         // This method is where you should put your application's initialisation code..
 
@@ -57,7 +57,7 @@ public:
         quit();
     }
 
-    void anotherInstanceStarted (const juce::String& commandLine) override
+    void anotherInstanceStarted (const String& commandLine) override
     {
         // When another instance of the app is launched while this one is running,
         // this method is invoked, and the commandLine parameter tells you what
@@ -69,13 +69,13 @@ public:
         This class implements the desktop window that contains an instance of
         our MainComponent class.
     */
-    class MainWindow    : public juce::DocumentWindow
+    class MainWindow    : public DocumentWindow
     {
     public:
-        MainWindow (juce::String name)
+        MainWindow (String name)
             : DocumentWindow (name,
-                              juce::Desktop::getInstance().getDefaultLookAndFeel()
-                                                          .findColour (juce::ResizableWindow::backgroundColourId),
+                              Desktop::getInstance().getDefaultLookAndFeel()
+                                    .findColour (ResizableWindow::backgroundColourId),
                               DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar (true);
@@ -85,6 +85,7 @@ public:
             setFullScreen (true);
            #else
             setResizable (true, true);
+            setResizeLimits (1200, 400, 3840, 2160);
             centreWithSize (getWidth(), getHeight());
            #endif
 

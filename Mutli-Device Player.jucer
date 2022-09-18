@@ -5,6 +5,31 @@
               companyName="Weird Numbers" companyCopyright="Copyright (c) 2022 Anthony Alfimov"
               companyWebsite="https://github.com/anthonyalfimov" cppLanguageStandard="17">
   <MAINGROUP id="EFDvI3" name="Mutli-Device Player">
+    <GROUP id="{5914D1D9-82E5-BDAD-599A-AAC6478EA1C6}" name="Assets"/>
+    <GROUP id="{E8FD8B6D-0A94-9994-3190-24B09C04B30D}" name="Components">
+      <FILE id="MuOYDA" name="InterfacePanel.cpp" compile="1" resource="0"
+            file="Source/InterfacePanel.cpp"/>
+      <FILE id="mQLyRU" name="InterfacePanel.h" compile="0" resource="0"
+            file="Source/InterfacePanel.h"/>
+      <FILE id="oZsRCG" name="AudioPlayerPanel.cpp" compile="1" resource="0"
+            file="Source/AudioPlayerPanel.cpp"/>
+      <FILE id="BZFdXS" name="AudioPlayerPanel.h" compile="0" resource="0"
+            file="Source/AudioPlayerPanel.h"/>
+      <FILE id="fcsuBN" name="LatencyPanel.cpp" compile="1" resource="0"
+            file="Source/LatencyPanel.cpp"/>
+      <FILE id="deMvcS" name="LatencyPanel.h" compile="0" resource="0" file="Source/LatencyPanel.h"/>
+      <FILE id="BJ5D5T" name="ControlPanel.cpp" compile="1" resource="0"
+            file="Source/ControlPanel.cpp"/>
+      <FILE id="S1cL4K" name="ControlPanel.h" compile="0" resource="0" file="Source/ControlPanel.h"/>
+      <FILE id="QIvfH9" name="DevicePanel.cpp" compile="1" resource="0" file="Source/DevicePanel.cpp"/>
+      <FILE id="tkAwkr" name="DevicePanel.h" compile="0" resource="0" file="Source/DevicePanel.h"/>
+    </GROUP>
+    <GROUP id="{AE89E423-7361-F9C4-74EB-F0560CB8CC83}" name="Processors">
+      <FILE id="cYJGSm" name="AudioFilePlayer.cpp" compile="1" resource="0"
+            file="Source/AudioFilePlayer.cpp"/>
+      <FILE id="PM7wnT" name="AudioFilePlayer.h" compile="0" resource="0"
+            file="Source/AudioFilePlayer.h"/>
+    </GROUP>
     <GROUP id="{94E19593-C5BC-CA60-8650-8B71D9FA3D52}" name="Source">
       <FILE id="I27LPC" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="pLfCVt" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>

@@ -5,7 +5,9 @@
               companyName="Weird Numbers" companyCopyright="Copyright (c) 2022 Anthony Alfimov"
               companyWebsite="https://github.com/anthonyalfimov" cppLanguageStandard="17">
   <MAINGROUP id="EFDvI3" name="Mutli-Device Player">
-    <GROUP id="{5914D1D9-82E5-BDAD-599A-AAC6478EA1C6}" name="Assets"/>
+    <GROUP id="{5914D1D9-82E5-BDAD-599A-AAC6478EA1C6}" name="Assets">
+      <FILE id="cDKm8q" name="SyncTrack.wav" compile="0" resource="1" file="Assets/SyncTrack.wav"/>
+    </GROUP>
     <GROUP id="{E8FD8B6D-0A94-9994-3190-24B09C04B30D}" name="Components">
       <FILE id="MuOYDA" name="InterfacePanel.cpp" compile="1" resource="0"
             file="Source/InterfacePanel.cpp"/>

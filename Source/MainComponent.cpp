@@ -60,6 +60,14 @@ MainComponent::MainComponent()
     formatManager.registerBasicFormats();
 
     //==========================================================================
+    // Set up sync track
+    syncPlayer.setAudioFormatReader (formatManager.createReaderFor
+        (std::make_unique<MemoryInputStream> (BinaryData::SyncTrack_wav,
+                                              BinaryData::SyncTrack_wavSize,
+                                              false)));
+    syncPlayer.setLooping (true);
+
+    //==========================================================================
     // Initilise audio
     setAudioChannels (0, 2);
 }

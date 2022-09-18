@@ -23,6 +23,9 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "AudioFilePlayer.h"
+#include "ControlPanel.h"
+#include "DevicePanel.h"
 
 //==============================================================================
 /*
@@ -46,9 +49,24 @@ public:
     void resized() override;
 
 private:
-    //==============================================================================
-    // Your private member variables go here...
+    //==========================================================================
+    // Transport management
+    AudioFilePlayer syncPlayer;
+    AudioFilePlayer filePlayer;
+    AudioFormatManager formatManager;
 
+    //==========================================================================
+    // UI Panels
+    Viewport devicePanelViewport;
+    DevicePanel devicePanel;
 
+    Viewport controlPanelViewport;
+    ControlPanel controlPanel;
+
+    //==========================================================================
+    // Audio parameters
+    inline static constexpr double maxLatencyInMs = 250.0 /*ms*/;
+
+    //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

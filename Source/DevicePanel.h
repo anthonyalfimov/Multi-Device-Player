@@ -11,19 +11,30 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "InterfacePanel.h"
 
 //==============================================================================
-/*
-*/
-class DevicePanel  : public juce::Component
+class DevicePanel  : public InterfacePanel,
+                     public ComponentListener
 {
 public:
-    DevicePanel();
-    ~DevicePanel() override;
+    explicit DevicePanel (AudioDeviceManager& manager);
 
-    void paint (juce::Graphics&) override;
+    //==========================================================================
+    void paint (Graphics& g) override;
     void resized() override;
 
+    //==========================================================================
+    void componentMovedOrResized (Component&, bool wasMoved, bool wasResized) override;
+
 private:
+    Label outputPanelLabel;
+
+    //==========================================================================
+    // Audio ouput device
+    AudioDeviceManager& deviceManager;
+    AudioDeviceSelectorComponent selectorPanel;
+
+    //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DevicePanel)
 };

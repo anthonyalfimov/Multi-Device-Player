@@ -21,14 +21,46 @@
  */
 
 #include "MainComponent.h"
+#include "InterfacePanel.h"
 
 //==============================================================================
 MainComponent::MainComponent()
+    : devicePanel (deviceManager),
+      controlPanel (syncPlayer,
+                    filePlayer,
+                    formatManager,
+                    maxLatencyInMs)
 {
-    // Make sure you set the size of the component after
-    // you add any child components.
-    setSize (800, 600);
+    //==========================================================================
+    // Update Look And Feel
+    auto bgColour = getLookAndFeel().findColour (ResizableWindow::backgroundColourId);
+    getLookAndFeel().setColour (ScrollBar::thumbColourId, bgColour.brighter());
 
+    //==========================================================================
+    // Set up device panel
+    addAndMakeVisible (devicePanelViewport);
+    devicePanelViewport.setViewedComponent (&devicePanel, false);
+    devicePanelViewport.setScrollBarsShown (true, false);
+
+    //==========================================================================
+    // Set up control panel
+    addAndMakeVisible (controlPanelViewport);
+    controlPanelViewport.setViewedComponent (&controlPanel, false);
+    controlPanelViewport.setScrollBarsShown (true, false);
+
+    //==========================================================================
+    // Set initial component size
+    setSize (1200, 400);
+    devicePanel.resized();
+    controlPanel.resized();
+    resized();
+
+    //==========================================================================
+    // Set up transport management facilities
+    formatManager.registerBasicFormats();
+
+    //==========================================================================
+    // Initilise audio
     setAudioChannels (0, 2);
 }
 
@@ -44,21 +76,24 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
     // This function will be called when the audio device is started, or when
     // its settings (i.e. sample rate, block size, etc) are changed.
 
-    // You can use this function to initialise any resources you might need,
-    // but be careful - it will be called on the audio thread, not the GUI thread.
-
-    // For more details, see the help for AudioProcessor::prepareToPlay()
+    syncPlayer.prepareToPlay (samplesPerBlockExpected, sampleRate);
+    filePlayer.prepareToPlay (samplesPerBlockExpected, sampleRate);
 }
 
 void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
-    // Your audio-processing code goes here!
+    /* Denormals are temporarily disabled when this object is created at the
+       beginning of the process block and re-enabled when it's destroyed at the
+       end of the process block. Therefore, anything that happens within the
+       process block doesn't need to disable denormals - they won't be
+       re-enabled until the end of the process block.
+    */
+    ScopedNoDenormals noDenormals;
 
-    // For more details, see the help for AudioProcessor::getNextAudioBlock()
-
-    // Right now we are not producing any data, in which case we need to clear the buffer
-    // (to prevent the output of random noise)
-    bufferToFill.clearActiveBufferRegion();
+    if (filePlayer.readyToPlay())
+        filePlayer.getNextAudioBlock (bufferToFill);
+    else
+        bufferToFill.clearActiveBufferRegion();
 }
 
 void MainComponent::releaseResources()
@@ -66,7 +101,8 @@ void MainComponent::releaseResources()
     // This will be called when the audio device stops, or when it is being
     // restarted due to a setting change.
 
-    // For more details, see the help for AudioProcessor::releaseResources()
+    syncPlayer.releaseResources();
+    filePlayer.releaseResources();
 }
 
 //==============================================================================
@@ -74,13 +110,27 @@ void MainComponent::paint (Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
-
-    // You can add your drawing code here!
 }
 
 void MainComponent::resized()
 {
-    // This is called when the MainContentComponent is resized.
-    // If you add any child components, this is where you should
-    // update their positions.
+    const auto padding = InterfacePanel::padding;
+    auto bounds = getLocalBounds().reduced (padding / 2);
+
+    //==========================================================================
+    // Device Panel:
+    auto devicePanelBounds = bounds.removeFromLeft (600);
+    devicePanelViewport.setBounds (devicePanelBounds);
+    devicePanel.setSize (devicePanelBounds.getWidth(), devicePanel.getHeight());
+
+    if (devicePanelViewport.getViewHeight() < devicePanel.getHeight())
+        devicePanelViewport.setBounds (devicePanelBounds.withTrimmedRight (-3));
+
+    //==========================================================================
+    // Control Panel:
+    controlPanelViewport.setBounds (bounds);
+    controlPanel.setSize (bounds.getWidth(), controlPanel.getHeight());
+
+    if (controlPanelViewport.getViewHeight() < controlPanel.getHeight())
+        controlPanelViewport.setBounds (bounds.withTrimmedRight (-3));
 }

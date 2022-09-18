@@ -11,19 +11,60 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "AudioFilePlayer.h"
+#include "InterfacePanel.h"
 
 //==============================================================================
-/*
-*/
-class AudioPlayerPanel  : public juce::Component
+class AudioPlayerPanel  : public InterfacePanel
 {
 public:
-    AudioPlayerPanel();
-    ~AudioPlayerPanel() override;
+    AudioPlayerPanel (AudioFilePlayer& player, AudioFormatManager& manager);
 
-    void paint (juce::Graphics&) override;
+    //==========================================================================
     void resized() override;
 
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPlayerPanel)
+    // Panel label
+    Label playerPanelLabel;
+
+    //==========================================================================
+    // Audio file management:
+    void fileButtonClicked();
+
+    AudioFilePlayer& filePlayer;
+    AudioFormatManager& formatManager;
+
+    std::unique_ptr<FileChooser> fileChooser;
+
+    // Audio file management components:
+    TextButton fileButton;
+    Label currentFileLabel;
+
+    //==========================================================================
+    // Transport components:
+
+    class TransportStateInfo  : public Component, public Timer
+    {
+    public:
+        explicit TransportStateInfo (const AudioFilePlayer& audioPlayer);
+
+        //==========================================================================
+        void paint (Graphics& g) override;
+        void resized() override;
+
+        //==========================================================================
+        void timerCallback() override;
+
+    private:
+        const AudioFilePlayer& filePlayer;
+        Label currentPositionLabel;
+
+        //==========================================================================
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TransportStateInfo);
+    };
+
+    TextButton playButton;
+    TextButton stopButton;
+    ToggleButton loopingToggle;
+    TransportStateInfo transportInfo;
 };

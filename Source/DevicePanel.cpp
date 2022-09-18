@@ -8,44 +8,63 @@
   ==============================================================================
 */
 
-#include <JuceHeader.h>
 #include "DevicePanel.h"
 
 //==============================================================================
-DevicePanel::DevicePanel()
+DevicePanel::DevicePanel (AudioDeviceManager& manager)
+    : deviceManager (manager),
+      selectorPanel (deviceManager, 0, 0, 0, 2, false, false, true, false)
 {
-    // In your constructor, you should add any child components, and
-    // initialise any special settings that your component needs.
+    //==========================================================================
+    // Audio device section
+    addAndMakeVisible (outputPanelLabel);
+    outputPanelLabel.setFont (headingFont);
+    outputPanelLabel.setColour (Label::textColourId, headingColour);
+    outputPanelLabel.setText("Audio Output Configuration", dontSendNotification);
 
+    addAndMakeVisible (selectorPanel);
+    selectorPanel.addComponentListener (this);
 }
 
-DevicePanel::~DevicePanel()
+//==============================================================================
+void DevicePanel::paint (Graphics& g)
 {
-}
+    auto bounds = getLocalBounds().reduced (padding / 2).toFloat();
 
-void DevicePanel::paint (juce::Graphics& g)
-{
-    /* This demo code just fills the component's background and
-       draws some placeholder text to get you started.
+    auto bgColour = getLookAndFeel().findColour (ResizableWindow::backgroundColourId);
+    g.setColour (bgColour.darker (0.2f));
 
-       You should replace everything in this method with your own
-       drawing code..
-    */
-
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
-
-    g.setColour (juce::Colours::grey);
-    g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
-
-    g.setColour (juce::Colours::white);
-    g.setFont (14.0f);
-    g.drawText ("DevicePanel", getLocalBounds(),
-                juce::Justification::centred, true);   // draw some placeholder text
+    g.fillRoundedRectangle (bounds, corner);
+    g.drawRoundedRectangle (bounds, corner, line);
 }
 
 void DevicePanel::resized()
 {
-    // This method is where you should set the bounds of any child
-    // components that your component contains..
+    //==========================================================================
+    // Manage panel hight
+    int requiredHeight
+    = selectorPanel.getHeight() + (buttonHeight + padding) + 3 * padding;
+    setSize (getWidth(), requiredHeight);
 
+    // Get usable bounds
+    auto bounds = getLocalBounds().reduced (padding / 2);
+
+    //==========================================================================
+    // Audio device section
+    outputPanelLabel.setBounds (bounds.removeFromTop (buttonHeight + padding)
+                                      .withTrimmedTop (padding)
+                                      .withTrimmedLeft (padding));
+
+    bounds.removeFromTop (padding);   // add spacing
+
+    selectorPanel.setBounds (bounds.removeFromTop (selectorPanel.getHeight()));
+}
+
+//==============================================================================
+void DevicePanel::componentMovedOrResized (Component& component,
+                                           bool wasMoved,
+                                           bool wasResized)
+{
+    if (&component == &selectorPanel && wasResized)
+        resized();
 }

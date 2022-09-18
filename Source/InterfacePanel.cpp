@@ -12,40 +12,21 @@
 #include "InterfacePanel.h"
 
 //==============================================================================
-InterfacePanel::InterfacePanel()
-{
-    // In your constructor, you should add any child components, and
-    // initialise any special settings that your component needs.
-
-}
-
-InterfacePanel::~InterfacePanel()
-{
-}
-
 void InterfacePanel::paint (juce::Graphics& g)
 {
-    /* This demo code just fills the component's background and
-       draws some placeholder text to get you started.
+    auto bgColour = getLookAndFeel().findColour (ResizableWindow::backgroundColourId);
+    g.setColour (bgColour.darker (0.2f));
 
-       You should replace everything in this method with your own
-       drawing code..
-    */
-
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
-
-    g.setColour (juce::Colours::grey);
-    g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
-
-    g.setColour (juce::Colours::white);
-    g.setFont (14.0f);
-    g.drawText ("InterfacePanel", getLocalBounds(),
-                juce::Justification::centred, true);   // draw some placeholder text
+    auto bounds = getLocalBounds().reduced (padding / 2).toFloat();
+    g.drawRoundedRectangle (bounds, corner, line);
 }
 
-void InterfacePanel::resized()
+void InterfacePanel::setSliderBounds (Slider& sl, Label& lb, juce::Rectangle<int> b)
 {
-    // This method is where you should set the bounds of any child
-    // components that your component contains..
+    auto labelBounds = b.removeFromLeft (buttonWidth);
+    lb.setBounds (labelBounds);
 
+    b.removeFromLeft (padding);
+    b.removeFromRight (padding);
+    sl.setBounds (b);
 }

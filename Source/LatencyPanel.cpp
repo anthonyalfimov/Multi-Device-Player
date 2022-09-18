@@ -12,40 +12,73 @@
 #include "LatencyPanel.h"
 
 //==============================================================================
-LatencyPanel::LatencyPanel()
+LatencyPanel::LatencyPanel (AudioFilePlayer& player, double maxLatency)
+    : syncPlayer (player)
 {
-    // In your constructor, you should add any child components, and
-    // initialise any special settings that your component needs.
+    // Latency panel label:
+    addAndMakeVisible (latencyPanelLabel);
+    latencyPanelLabel.setFont (headingFont);
+    latencyPanelLabel.setColour (Label::textColourId, headingColour);
+    latencyPanelLabel.setText("Latency Compensation", dontSendNotification);
 
-}
+    // Sync track button:
+    addAndMakeVisible (syncTrackButton);
+    syncTrackButton.setToggleable (true);
+    syncTrackButton.setToggleState (false, dontSendNotification);
+    syncTrackButton.setButtonText ("Play Sync Track");
 
-LatencyPanel::~LatencyPanel()
-{
-}
+    syncPlayer.onTransportStarted = [this]
+    {
+        syncTrackButton.setButtonText ("Stop Sync Track");
+        syncTrackButton.setToggleState (true, dontSendNotification);
+    };
 
-void LatencyPanel::paint (juce::Graphics& g)
-{
-    /* This demo code just fills the component's background and
-       draws some placeholder text to get you started.
+    syncPlayer.onTransportStopped = [this]
+    {
+        syncTrackButton.setButtonText ("Play Sync Track");
+        syncTrackButton.setToggleState (false, dontSendNotification);
+    };
 
-       You should replace everything in this method with your own
-       drawing code..
-    */
+    syncTrackButton.onClick = [this]
+    {
+        if (! syncTrackButton.getToggleState())
+            syncPlayer.playPause();
+        else
+            syncPlayer.stop();
+    };
 
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
-
-    g.setColour (juce::Colours::grey);
-    g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
-
-    g.setColour (juce::Colours::white);
-    g.setFont (14.0f);
-    g.drawText ("LatencyPanel", getLocalBounds(),
-                juce::Justification::centred, true);   // draw some placeholder text
+    // Latency slider
+    addAndMakeVisible (latencySlider);
+    addAndMakeVisible (latencySliderLabel);
+    latencySlider.setTextBoxStyle (Slider::TextBoxRight, false, 100, 20);
+    latencySlider.setDoubleClickReturnValue (true, 0.0);
+    latencySlider.setScrollWheelEnabled (false);
+    latencySlider.setRange ({ -maxLatency, maxLatency }, 1.0);
+    latencySlider.setTextValueSuffix (" ms");
+    latencySliderLabel.setText ("Latency", dontSendNotification);
 }
 
 void LatencyPanel::resized()
 {
-    // This method is where you should set the bounds of any child
-    // components that your component contains..
+    // Manage panel hight
+    int requiredHeight = 3 * (buttonHeight + padding) + 2 * padding;
+    setSize (getWidth(), requiredHeight);
 
+    // Set control bounds
+    auto bounds = getLocalBounds().reduced (padding / 2);
+
+    latencyPanelLabel.setBounds (bounds.removeFromTop (buttonHeight + padding)
+                                       .withTrimmedTop (padding)
+                                       .withTrimmedLeft (padding));
+
+    syncTrackButton.setBounds (bounds.removeFromTop (buttonHeight + padding)
+                                     .withTrimmedTop (padding)
+                                     .withTrimmedLeft (padding)
+                                     .withWidth (2 * buttonWidth + padding));
+
+    setSliderBounds (latencySlider,
+                     latencySliderLabel,
+                     bounds.removeFromTop (buttonHeight + padding)
+                           .withTrimmedTop (padding)
+                           .withTrimmedLeft (padding));
 }

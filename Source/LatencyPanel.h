@@ -11,19 +11,30 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "InterfacePanel.h"
+#include "AudioFilePlayer.h"
 
 //==============================================================================
-/*
-*/
-class LatencyPanel  : public juce::Component
+class LatencyPanel  : public InterfacePanel
 {
 public:
-    LatencyPanel();
-    ~LatencyPanel() override;
+    explicit LatencyPanel (AudioFilePlayer& player, double maxLatency);
 
-    void paint (juce::Graphics&) override;
     void resized() override;
 
+    //==========================================================================
+    // Parameter access
+    Slider& getLatency() { return latencySlider; }
+    bool isSyncTrackPlaying() const { return syncTrackButton.getToggleState(); }
+
 private:
+    AudioFilePlayer& syncPlayer;
+
+    Label latencyPanelLabel;
+    TextButton syncTrackButton;
+    Slider latencySlider;
+    Label latencySliderLabel;
+
+    //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LatencyPanel)
 };

@@ -31,6 +31,10 @@
             file="Source/AudioFilePlayer.cpp"/>
       <FILE id="PM7wnT" name="AudioFilePlayer.h" compile="0" resource="0"
             file="Source/AudioFilePlayer.h"/>
+      <FILE id="uzukBv" name="MultiDevicePlayer.cpp" compile="1" resource="0"
+            file="Source/MultiDevicePlayer.cpp"/>
+      <FILE id="yYYgBz" name="MultiDevicePlayer.h" compile="0" resource="0"
+            file="Source/MultiDevicePlayer.h"/>
     </GROUP>
     <GROUP id="{94E19593-C5BC-CA60-8650-8B71D9FA3D52}" name="Source">
       <FILE id="I27LPC" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>

@@ -25,16 +25,22 @@
 
 //==============================================================================
 MainComponent::MainComponent()
-    : devicePanel (deviceManager),
-      controlPanel (syncPlayer,
-                    filePlayer,
-                    formatManager,
-                    maxLatencyInMs)
+    : devicePanel (audioOutput.mainDeviceManager, audioOutput.linkedDeviceManager),
+      controlPanel (syncPlayer, filePlayer, formatManager, maxLatencyInMs)
 {
     //==========================================================================
     // Update Look And Feel
     auto bgColour = getLookAndFeel().findColour (ResizableWindow::backgroundColourId);
     getLookAndFeel().setColour (ScrollBar::thumbColourId, bgColour.brighter());
+
+    //==========================================================================
+    // Set up audio playback
+    audioOutput.setAudioSource (this);
+
+    // MARK: Trigger PrepareToPlay to prepare `this` AudioSource
+    // TODO: Consider initialising devices from outside MultiDevicePlayer
+    //       e.g. add initialisation method that can be called 
+    audioOutput.mainDeviceManager.initialiseWithDefaultDevices (0, 2);
 
     //==========================================================================
     // Set up device panel
@@ -66,16 +72,11 @@ MainComponent::MainComponent()
                                               BinaryData::SyncTrack_wavSize,
                                               false)));
     syncPlayer.setLooping (true);
-
-    //==========================================================================
-    // Initilise audio
-    setAudioChannels (0, 2);
 }
 
 MainComponent::~MainComponent()
 {
-    // This shuts down the audio device and clears the audio source.
-    shutdownAudio();
+
 }
 
 //==============================================================================

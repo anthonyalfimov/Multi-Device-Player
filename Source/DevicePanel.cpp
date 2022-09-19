@@ -11,9 +11,11 @@
 #include "DevicePanel.h"
 
 //==============================================================================
-DevicePanel::DevicePanel (AudioDeviceManager& manager)
-    : deviceManager (manager),
-      selectorPanel (deviceManager, 0, 0, 0, 2, false, false, true, false)
+DevicePanel::DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked)
+    : mainDeviceManager (main),
+      mainSelectorPanel (mainDeviceManager, 0, 0, 2, 2, false, false, true, false),
+      linkedDeviceManager (linked),
+      linkedSelectorPanel (linkedDeviceManager, 0, 0, 2, 2, false, false, true, false)
 {
     //==========================================================================
     // Audio device section
@@ -22,8 +24,11 @@ DevicePanel::DevicePanel (AudioDeviceManager& manager)
     outputPanelLabel.setColour (Label::textColourId, headingColour);
     outputPanelLabel.setText("Audio Output Configuration", dontSendNotification);
 
-    addAndMakeVisible (selectorPanel);
-    selectorPanel.addComponentListener (this);
+    addAndMakeVisible (mainSelectorPanel);
+    mainSelectorPanel.addComponentListener (this);
+
+    addAndMakeVisible (linkedSelectorPanel);
+    linkedSelectorPanel.addComponentListener (this);
 }
 
 //==============================================================================
@@ -42,8 +47,8 @@ void DevicePanel::resized()
 {
     //==========================================================================
     // Manage panel hight
-    int requiredHeight
-    = selectorPanel.getHeight() + (buttonHeight + padding) + 3 * padding;
+    int requiredHeight = mainSelectorPanel.getHeight() + linkedSelectorPanel.getHeight()
+                       + (buttonHeight + padding) + 3 * padding;
     setSize (getWidth(), requiredHeight);
 
     // Get usable bounds
@@ -57,7 +62,8 @@ void DevicePanel::resized()
 
     bounds.removeFromTop (padding);   // add spacing
 
-    selectorPanel.setBounds (bounds.removeFromTop (selectorPanel.getHeight()));
+    mainSelectorPanel.setBounds (bounds.removeFromTop (mainSelectorPanel.getHeight()));
+    linkedSelectorPanel.setBounds (bounds.removeFromTop (linkedSelectorPanel.getHeight()));
 }
 
 //==============================================================================
@@ -65,6 +71,6 @@ void DevicePanel::componentMovedOrResized (Component& component,
                                            bool wasMoved,
                                            bool wasResized)
 {
-    if (&component == &selectorPanel && wasResized)
+    if (wasResized)
         resized();
 }

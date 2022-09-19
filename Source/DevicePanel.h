@@ -18,7 +18,7 @@ class DevicePanel  : public InterfacePanel,
                      public ComponentListener
 {
 public:
-    explicit DevicePanel (AudioDeviceManager& manager);
+    DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked);
 
     //==========================================================================
     void paint (Graphics& g) override;
@@ -31,9 +31,12 @@ private:
     Label outputPanelLabel;
 
     //==========================================================================
-    // Audio ouput device
-    AudioDeviceManager& deviceManager;
-    AudioDeviceSelectorComponent selectorPanel;
+    // Audio ouput devices
+    AudioDeviceManager& mainDeviceManager;
+    AudioDeviceSelectorComponent mainSelectorPanel;
+
+    AudioDeviceManager& linkedDeviceManager;
+    AudioDeviceSelectorComponent linkedSelectorPanel;
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DevicePanel)

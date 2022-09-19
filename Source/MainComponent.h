@@ -24,6 +24,7 @@
 
 #include <JuceHeader.h>
 #include "AudioFilePlayer.h"
+#include "MultiDevicePlayer.h"
 #include "ControlPanel.h"
 #include "DevicePanel.h"
 
@@ -32,7 +33,8 @@
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class MainComponent  : public AudioAppComponent
+class MainComponent  : public Component,
+                       public AudioSource
 {
 public:
     //==============================================================================
@@ -54,6 +56,10 @@ private:
     AudioFilePlayer syncPlayer;
     AudioFilePlayer filePlayer;
     AudioFormatManager formatManager;
+
+    //==========================================================================
+    // Audio Processing
+    MultiDevicePlayer audioOutput;
 
     //==========================================================================
     // UI Panels

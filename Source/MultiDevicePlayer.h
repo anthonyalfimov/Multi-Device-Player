@@ -55,6 +55,9 @@ private:
 
             sharedBuffer.prepare (spec);
 
+            // TODO: Smaller buffer size can produce glithes - why? (< x3)
+            //       How to determine the necessary buffer size. Or is the
+            //       cause of glitches something else?
             sharedBuffer.setMaximumDelayInSamples (10 * samplesPerBlockExpected);
         }
 

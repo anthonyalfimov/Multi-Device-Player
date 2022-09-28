@@ -55,9 +55,6 @@ private:
 
             sharedBuffer.prepare (spec);
 
-            // TODO: Smaller buffer size can produce glithes - why? (< x3)
-            //       How to determine the necessary buffer size. Or is the
-            //       cause of glitches something else?
             sharedBuffer.setMaximumDelayInSamples (10 * samplesPerBlockExpected);
         }
 
@@ -89,6 +86,9 @@ private:
     private:
         AudioSource* source = nullptr;
         DelayBuffer& sharedBuffer;
+
+        //======================================================================
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainAudioSource)
     };
 
     class LinkedAudioSource  : public AudioSource
@@ -124,9 +124,15 @@ private:
         DelayBuffer& sharedBuffer;
 
         double delayInSamples = 0;
+
+        //======================================================================
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LinkedAudioSource)
     };
 
     //==========================================================================
     MainAudioSource mainSource;
     LinkedAudioSource linkedSource;
+
+    //==========================================================================
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MultiDevicePlayer)
 };

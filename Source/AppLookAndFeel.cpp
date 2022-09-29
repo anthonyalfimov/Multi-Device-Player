@@ -21,8 +21,7 @@ AppLookAndFeel::AppLookAndFeel()
     const Colour playColour (0xFF075E14);
     const Colour stopColour (0xFF952A09);
 
-    const Colour sliderTrackColour (0xFFB17101);
-    const Colour sliderBgColour (0xFF593D0D);
+    const Colour sliderTrackColour (0xFFB87600);
 
     const Colour textColour (0xFFEFEFEF);
     const Colour headingColour (0xFFDFDFDF);
@@ -59,7 +58,7 @@ AppLookAndFeel::AppLookAndFeel()
     setColour (Slider::textBoxTextColourId, textColour);
     setColour (Slider::thumbColourId, headingColour);
     setColour (Slider::trackColourId, sliderTrackColour);
-    setColour (Slider::backgroundColourId, sliderBgColour);
+    setColour (Slider::backgroundColourId, sliderTrackColour.withAlpha (0.2f));
 
     // Scrollbar colours
     setColour (ScrollBar::thumbColourId, backgroundColour.brighter());

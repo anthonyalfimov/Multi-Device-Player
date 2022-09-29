@@ -13,7 +13,7 @@
 #include <JuceHeader.h>
 
 /**
-    Lock-free FIFO for audio samples
+    Thread-safe resizable FIFO for audio samples
 */
 class AudioFifo
 {
@@ -65,22 +65,24 @@ public:
     /** [Realtime] [Thread-safe]
         Push samples to the FIFO.
 
-        @return     Returns true if all requested samples have been pushed to
-                    the FIFO.
+        @returns    the number of samples pushed to the FIFO.
     */
-    bool push (const AudioSourceChannelInfo& inBuffer);
+    int push (const AudioSourceChannelInfo& inBuffer);
 
     /** [Realtime] [Thread-safe]
         Pop samples from the FIFO.
 
-        @return     Returns true if all requested samples have been popped from
-                    the FIFO.
+        @returns    the number of samples popped from the FIFO.
     */
-    bool pop (AudioSourceChannelInfo& outBuffer);
+    int pop (const AudioSourceChannelInfo& outBuffer);
 
 private:
-    AbstractFifo fifoManager { 32 };
-    AudioBuffer<float> buffer { 2, 32 };
+    AbstractFifo fifoManager { defaultSize };
+    AudioBuffer<float> buffer { 2, defaultSize };
+
+//    SpinLock bufferMutex;
+
+    inline static constexpr int defaultSize = 512;
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioFifo)

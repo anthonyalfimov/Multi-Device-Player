@@ -25,7 +25,7 @@
 
 //==============================================================================
 MainComponent::MainComponent()
-    : devicePanel (audioOutput.mainDeviceManager, audioOutput.linkedDeviceManager),
+    : devicePanel (audioOutput.mainDeviceManager, audioOutput.clientDeviceManager),
       controlPanel (syncPlayer, filePlayer, formatManager, maxLatencyInMs)
 {
     //==========================================================================
@@ -35,7 +35,7 @@ MainComponent::MainComponent()
 
     //==========================================================================
     // Set up audio playback
-    audioOutput.setAudioSource (this);
+    audioOutput.setSource (this);
 
     // MARK: Trigger PrepareToPlay to prepare `this` AudioSource
     // TODO: Consider initialising devices from outside MultiDevicePlayer

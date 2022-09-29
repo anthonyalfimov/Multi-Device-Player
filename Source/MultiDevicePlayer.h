@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "AudioFifo.h"
 
 class MultiDevicePlayer
 {
@@ -18,27 +19,25 @@ public:
     MultiDevicePlayer();
     ~MultiDevicePlayer();
 
-    void setAudioSource (AudioSource* src) { mainSource.setAudioSource (src); }
+    void setSource (AudioSource* src) { mainSource.setSource (src); }
 
     AudioDeviceManager mainDeviceManager;
-    AudioDeviceManager linkedDeviceManager;
+    AudioDeviceManager clientDeviceManager;
 
 private:
     AudioSourcePlayer mainSourcePlayer;
-    AudioSourcePlayer linkedSourcePlayer;
+    AudioSourcePlayer clientSourcePlayer;
 
-    // TODO: Consider using AbstractFifo with an AudioBuffer
-    using DelayBuffer = dsp::DelayLine<double, dsp::DelayLineInterpolationTypes::Thiran>;
-    DelayBuffer sharedBuffer;
+    AudioFifo fifoBuffer;
 
     //==========================================================================
     class MainAudioSource  : public AudioSource
     {
     public:
-        explicit MainAudioSource (DelayBuffer& sb) : sharedBuffer (sb) {}
+        explicit MainAudioSource (AudioFifo& sb) : sharedBuffer (sb) {}
 
         //======================================================================
-        void setAudioSource (AudioSource* src) { source = src; }
+        void setSource (AudioSource* src) { source = src; }
 
         //======================================================================
         void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override
@@ -46,16 +45,10 @@ private:
             if (source != nullptr)
                 source->prepareToPlay (samplesPerBlockExpected, sampleRate);
 
-            const dsp::ProcessSpec spec
-            {
-                sampleRate,
-                static_cast<uint32> (samplesPerBlockExpected),
-                static_cast<uint32> (2)
-            };
-
-            sharedBuffer.prepare (spec);
-
-            sharedBuffer.setMaximumDelayInSamples (10 * samplesPerBlockExpected);
+            // TODO:  Determine the number of channels based on device configuration
+            // TODO:  Consider using a function for buffer size?
+            // FIXME: This operation is not thread-safe!
+            sharedBuffer.setSize (2, samplesPerBlockExpected * 4);
         }
 
         void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
@@ -65,15 +58,7 @@ private:
             else
                 bufferToFill.clearActiveBufferRegion();
 
-            const auto** inBuffer = bufferToFill.buffer->getArrayOfReadPointers();
-
-            for (int i = 0; i < bufferToFill.numSamples; ++i)
-            {
-                const int sample = bufferToFill.startSample + i;
-
-                sharedBuffer.pushSample (0, inBuffer[0][sample]);
-                sharedBuffer.pushSample (1, inBuffer[1][sample]);
-            }
+            sharedBuffer.push (bufferToFill);
         }
 
         void releaseResources() override
@@ -81,38 +66,30 @@ private:
             if (source != nullptr)
                 source->releaseResources();
 
-            sharedBuffer.reset();
+            //sharedBuffer.reset();
         }
     private:
         AudioSource* source = nullptr;
-        DelayBuffer& sharedBuffer;
+        AudioFifo& sharedBuffer;
 
         //======================================================================
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainAudioSource)
     };
 
-    class LinkedAudioSource  : public AudioSource
+    class ClientAudioSource  : public AudioSource
     {
     public:
-        explicit LinkedAudioSource (DelayBuffer& sb) : sharedBuffer (sb) {}
+        explicit ClientAudioSource (AudioFifo& sb) : sharedBuffer (sb) {}
 
         //======================================================================
         void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override
         {
-            delayInSamples = samplesPerBlockExpected;
+
         }
 
         void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
         {
-            auto** outBuffer = bufferToFill.buffer->getArrayOfWritePointers();
-
-            for (int i = 0; i < bufferToFill.numSamples; ++i)
-            {
-                const int sample = bufferToFill.startSample + i;
-
-                outBuffer[0][sample] = sharedBuffer.popSample (0, delayInSamples);
-                outBuffer[1][sample] = sharedBuffer.popSample (1, delayInSamples);
-            }
+            sharedBuffer.pop (bufferToFill);
         }
 
         void releaseResources() override
@@ -121,17 +98,15 @@ private:
         }
 
     private:
-        DelayBuffer& sharedBuffer;
-
-        double delayInSamples = 0;
+        AudioFifo& sharedBuffer;
 
         //======================================================================
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LinkedAudioSource)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClientAudioSource)
     };
 
     //==========================================================================
     MainAudioSource mainSource;
-    LinkedAudioSource linkedSource;
+    ClientAudioSource clientSource;
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MultiDevicePlayer)

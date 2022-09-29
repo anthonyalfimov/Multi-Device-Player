@@ -20,24 +20,24 @@ int AudioFifo::getTotalSize() const
 void AudioFifo::setSize (int newNumChannels, int newNumSamples)
 {
     // TODO: Use a spin lock to resize the FIFO?
-    //       Pushing and popping could fail and return "false" if lock can't be
-    //       acquired. FIFO data (total size, free space and available items)
-    //       can all return failure states while FIFO is being resized.
+    // Push and pop will require locking for the duration of the whole operation.
+    // Are there other way to resize the FIFO in a thread-safe manner when
+    // one of the devices is changed?
 
-    fifoManager.setTotalSize (newNumSamples);
     buffer.setSize (newNumChannels, newNumSamples, false, true, false);
+    fifoManager.setTotalSize (newNumSamples);
 }
 
 void AudioFifo::reset()
 {
     // TODO: Use a spin lock to reset the FIFO?
 
-    fifoManager.reset();
     buffer.clear();
+    fifoManager.reset();
 }
 
 //==========================================================================
-bool AudioFifo::push (const AudioSourceChannelInfo& inBuffer)
+int AudioFifo::push (const AudioSourceChannelInfo& inBuffer)
 {
     const auto status = fifoManager.write (inBuffer.numSamples);
 
@@ -67,10 +67,10 @@ bool AudioFifo::push (const AudioSourceChannelInfo& inBuffer)
         }
     }
 
-    return (status.blockSize1 + status.blockSize2) == inBuffer.numSamples;
+    return status.blockSize1 + status.blockSize2;
 }
 
-bool AudioFifo::pop (AudioSourceChannelInfo& outBuffer)
+int AudioFifo::pop (const AudioSourceChannelInfo& outBuffer)
 {
     const auto status = fifoManager.read (outBuffer.numSamples);
 
@@ -100,5 +100,5 @@ bool AudioFifo::pop (AudioSourceChannelInfo& outBuffer)
         }
     }
 
-    return (status.blockSize1 + status.blockSize2) == outBuffer.numSamples;
+    return status.blockSize1 + status.blockSize2;
 }

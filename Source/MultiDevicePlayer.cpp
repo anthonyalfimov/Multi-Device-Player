@@ -11,27 +11,27 @@
 #include "MultiDevicePlayer.h"
 
 MultiDevicePlayer::MultiDevicePlayer()
-    : mainSource (sharedBuffer), linkedSource (sharedBuffer)
+    : mainSource (fifoBuffer), clientSource (fifoBuffer)
 {
     mainDeviceManager.initialiseWithDefaultDevices (0, 2);
-    linkedDeviceManager.initialiseWithDefaultDevices (0, 2);
+    clientDeviceManager.initialiseWithDefaultDevices (0, 2);
 
     mainDeviceManager.addAudioCallback (&mainSourcePlayer);
-    linkedDeviceManager.addAudioCallback (&linkedSourcePlayer);
+    clientDeviceManager.addAudioCallback (&clientSourcePlayer);
 
     mainSourcePlayer.setSource (&mainSource);
-    linkedSourcePlayer.setSource (&linkedSource);
+    clientSourcePlayer.setSource (&clientSource);
 }
 
 MultiDevicePlayer::~MultiDevicePlayer()
 {
     mainSourcePlayer.setSource (nullptr);
-    linkedSourcePlayer.setSource (nullptr);
+    clientSourcePlayer.setSource (nullptr);
 
     mainDeviceManager.removeAudioCallback (&mainSourcePlayer);
-    linkedDeviceManager.removeAudioCallback (&linkedSourcePlayer);
+    clientDeviceManager.removeAudioCallback (&clientSourcePlayer);
 
     mainDeviceManager.closeAudioDevice();
-    linkedDeviceManager.closeAudioDevice();
+    clientDeviceManager.closeAudioDevice();
 }
 

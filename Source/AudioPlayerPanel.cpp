@@ -38,7 +38,9 @@ AudioPlayerPanel::AudioPlayerPanel (AudioFilePlayer& player, AudioFormatManager&
     // Play / Pause button:
     addAndMakeVisible (playButton);
     playButton.setButtonText ("Play");
-    playButton.setColour (TextButton::buttonColourId, Colours::green);
+    const auto playColour
+    = getLookAndFeel().findColour (AppLookAndFeel::playButtonColourId);
+    playButton.setColour (TextButton::buttonColourId, playColour);
     playButton.onClick = [this]
     {
         filePlayer.playPause();
@@ -63,7 +65,9 @@ AudioPlayerPanel::AudioPlayerPanel (AudioFilePlayer& player, AudioFormatManager&
     // Stop button:
     addAndMakeVisible (stopButton);
     stopButton.setButtonText ("Stop");
-    stopButton.setColour (TextButton::buttonColourId, Colours::red);
+    const auto stopColour
+    = getLookAndFeel().findColour (AppLookAndFeel::stopButtonColourId);
+    stopButton.setColour (TextButton::buttonColourId, stopColour);
     stopButton.onClick = [this]
     {
         filePlayer.stop();

@@ -22,8 +22,9 @@ public:
 
     enum ColourIds
     {
-        panelColourId = 1,
-        headingColourId,
+        headingColourId = 1,
+        playButtonColourId,
+        stopButtonColourId
     };
 
 private:

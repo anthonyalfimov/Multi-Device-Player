@@ -27,6 +27,7 @@
 #include "MultiDevicePlayer.h"
 #include "ControlPanel.h"
 #include "DevicePanel.h"
+#include "AppLookAndFeel.h"
 
 //==============================================================================
 /*
@@ -62,16 +63,20 @@ private:
     MultiDevicePlayer audioOutput;
 
     //==========================================================================
-    // UI Panels
-    Viewport devicePanelViewport;
-    DevicePanel devicePanel;
-
-    Viewport controlPanelViewport;
-    ControlPanel controlPanel;
-
-    //==========================================================================
     // Audio parameters
     inline static constexpr double maxLatencyInMs = 250.0 /*ms*/;
+
+    //==========================================================================
+    // UI Panels
+    Viewport devicePanelViewport;
+    std::unique_ptr<DevicePanel> devicePanel;
+
+    Viewport controlPanelViewport;
+    std::unique_ptr<ControlPanel> controlPanel;
+
+    //==========================================================================
+    // UI Style
+    AppLookAndFeel lookAndFeel;
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)

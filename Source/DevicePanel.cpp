@@ -21,6 +21,8 @@ DevicePanel::DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked)
     // Audio device section
     addAndMakeVisible (outputPanelLabel);
     outputPanelLabel.setFont (headingFont);
+    const auto headingColour
+    = getLookAndFeel().findColour (AppLookAndFeel::headingColourId);
     outputPanelLabel.setColour (Label::textColourId, headingColour);
     outputPanelLabel.setText("Audio Output Configuration", dontSendNotification);
 

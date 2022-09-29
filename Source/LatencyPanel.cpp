@@ -18,6 +18,8 @@ LatencyPanel::LatencyPanel (AudioFilePlayer& player, double maxLatency)
     // Latency panel label:
     addAndMakeVisible (latencyPanelLabel);
     latencyPanelLabel.setFont (headingFont);
+    const auto headingColour
+    = getLookAndFeel().findColour (AppLookAndFeel::headingColourId);
     latencyPanelLabel.setColour (Label::textColourId, headingColour);
     latencyPanelLabel.setText("Latency Compensation", dontSendNotification);
 

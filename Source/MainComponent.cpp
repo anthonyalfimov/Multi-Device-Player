@@ -25,13 +25,11 @@
 
 //==============================================================================
 MainComponent::MainComponent()
-    : devicePanel (audioOutput.mainDeviceManager, audioOutput.clientDeviceManager),
-      controlPanel (syncPlayer, filePlayer, formatManager, maxLatencyInMs)
 {
     //==========================================================================
     // Update Look And Feel
-    auto bgColour = getLookAndFeel().findColour (ResizableWindow::backgroundColourId);
-    getLookAndFeel().setColour (ScrollBar::thumbColourId, bgColour.brighter());
+    LookAndFeel::setDefaultLookAndFeel (&lookAndFeel);
+    setLookAndFeel (&lookAndFeel);
 
     //==========================================================================
     // Set up audio playback
@@ -44,21 +42,27 @@ MainComponent::MainComponent()
 
     //==========================================================================
     // Set up device panel
+    devicePanel = std::make_unique<DevicePanel> (audioOutput.mainDeviceManager,
+                                                 audioOutput.clientDeviceManager);
+
     addAndMakeVisible (devicePanelViewport);
-    devicePanelViewport.setViewedComponent (&devicePanel, false);
+    devicePanelViewport.setViewedComponent (devicePanel.get(), false);
     devicePanelViewport.setScrollBarsShown (true, false);
 
     //==========================================================================
     // Set up control panel
+    controlPanel = std::make_unique<ControlPanel> (syncPlayer, filePlayer,
+                                                   formatManager, maxLatencyInMs);
+
     addAndMakeVisible (controlPanelViewport);
-    controlPanelViewport.setViewedComponent (&controlPanel, false);
+    controlPanelViewport.setViewedComponent (controlPanel.get(), false);
     controlPanelViewport.setScrollBarsShown (true, false);
 
     //==========================================================================
     // Set initial component size
     setSize (1200, 400);
-    devicePanel.resized();
-    controlPanel.resized();
+    devicePanel->resized();
+    controlPanel->resized();
     resized();
 
     //==========================================================================
@@ -76,7 +80,10 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 {
-
+    //==========================================================================
+    // Release Look And Feel
+    LookAndFeel::setDefaultLookAndFeel (nullptr);
+    setLookAndFeel (nullptr);
 }
 
 //==============================================================================
@@ -130,16 +137,16 @@ void MainComponent::resized()
     // Device Panel:
     auto devicePanelBounds = bounds.removeFromLeft (600);
     devicePanelViewport.setBounds (devicePanelBounds);
-    devicePanel.setSize (devicePanelBounds.getWidth(), devicePanel.getHeight());
+    devicePanel->setSize (devicePanelBounds.getWidth(), devicePanel->getHeight());
 
-    if (devicePanelViewport.getViewHeight() < devicePanel.getHeight())
+    if (devicePanelViewport.getViewHeight() < devicePanel->getHeight())
         devicePanelViewport.setBounds (devicePanelBounds.withTrimmedRight (-3));
 
     //==========================================================================
     // Control Panel:
     controlPanelViewport.setBounds (bounds);
-    controlPanel.setSize (bounds.getWidth(), controlPanel.getHeight());
+    controlPanel->setSize (bounds.getWidth(), controlPanel->getHeight());
 
-    if (controlPanelViewport.getViewHeight() < controlPanel.getHeight())
+    if (controlPanelViewport.getViewHeight() < controlPanel->getHeight())
         controlPanelViewport.setBounds (bounds.withTrimmedRight (-3));
 }

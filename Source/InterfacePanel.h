@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "AppLookAndFeel.h"
 
 //==============================================================================
 /*
@@ -34,9 +35,6 @@ protected:
 
     static inline constexpr float corner = 5.0f;
     static inline constexpr float line = 2.0f;
-
-    const Colour lightSliderGroove { 0xFFD1D8DC };
-    const Colour headingColour { 0xFFD1D8DC };
 
     const Font headingFont { 18, Font::plain };
 

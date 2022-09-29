@@ -18,6 +18,8 @@ AudioPlayerPanel::AudioPlayerPanel (AudioFilePlayer& player, AudioFormatManager&
     // Player panel label:
     addAndMakeVisible (playerPanelLabel);
     playerPanelLabel.setFont (headingFont);
+    const auto headingColour
+    = getLookAndFeel().findColour (AppLookAndFeel::headingColourId);
     playerPanelLabel.setColour (Label::textColourId, headingColour);
     playerPanelLabel.setText("Audio File Player", dontSendNotification);
 

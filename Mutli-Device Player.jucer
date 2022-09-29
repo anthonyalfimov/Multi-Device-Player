@@ -8,6 +8,12 @@
     <GROUP id="{5914D1D9-82E5-BDAD-599A-AAC6478EA1C6}" name="Assets">
       <FILE id="cDKm8q" name="SyncTrack.wav" compile="0" resource="1" file="Assets/SyncTrack.wav"/>
     </GROUP>
+    <GROUP id="{4800FE7F-C5DD-B402-BE7D-E1E16B05642C}" name="Configuration">
+      <FILE id="KJyGas" name="AppLookAndFeel.cpp" compile="1" resource="0"
+            file="Source/AppLookAndFeel.cpp"/>
+      <FILE id="YwjmTn" name="AppLookAndFeel.h" compile="0" resource="0"
+            file="Source/AppLookAndFeel.h"/>
+    </GROUP>
     <GROUP id="{E8FD8B6D-0A94-9994-3190-24B09C04B30D}" name="Components">
       <FILE id="MuOYDA" name="InterfacePanel.cpp" compile="1" resource="0"
             file="Source/InterfacePanel.cpp"/>

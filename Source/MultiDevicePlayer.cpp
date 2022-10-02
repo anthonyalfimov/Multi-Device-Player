@@ -11,7 +11,7 @@
 #include "MultiDevicePlayer.h"
 
 MultiDevicePlayer::MultiDevicePlayer()
-    : mainSource (fifoBuffer), clientSource (fifoBuffer)
+    : mainSource (*this), clientSource (*this)
 {
     mainDeviceManager.initialiseWithDefaultDevices (0, 2);
     clientDeviceManager.initialiseWithDefaultDevices (0, 2);

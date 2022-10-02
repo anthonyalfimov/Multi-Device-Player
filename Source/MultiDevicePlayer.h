@@ -29,12 +29,13 @@ private:
     AudioSourcePlayer clientSourcePlayer;
 
     AudioFifo fifoBuffer;
+    SpinLock popMutex;
 
     //==========================================================================
     class MainAudioSource  : public AudioSource
     {
     public:
-        explicit MainAudioSource (AudioFifo& sb) : sharedBuffer (sb) {}
+        explicit MainAudioSource (MultiDevicePlayer& mdp) : owner (mdp) {}
 
         //======================================================================
         void setSource (AudioSource* src) { source = src; }
@@ -47,8 +48,8 @@ private:
 
             // TODO:  Determine the number of channels based on device configuration
             // TODO:  Consider using a function for buffer size?
-            // FIXME: This operation is not thread-safe!
-            sharedBuffer.setSize (2, samplesPerBlockExpected * 4);
+            SpinLock::ScopedLockType lock (owner.popMutex);
+            owner.fifoBuffer.setSize (2, samplesPerBlockExpected * 4);
         }
 
         void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
@@ -58,7 +59,7 @@ private:
             else
                 bufferToFill.clearActiveBufferRegion();
 
-            sharedBuffer.push (bufferToFill);
+            owner.fifoBuffer.push (bufferToFill);
         }
 
         void releaseResources() override
@@ -70,16 +71,18 @@ private:
         }
     private:
         AudioSource* source = nullptr;
-        AudioFifo& sharedBuffer;
+        MultiDevicePlayer& owner;
 
         //======================================================================
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainAudioSource)
     };
 
+    friend class MainAudioSource;
+
     class ClientAudioSource  : public AudioSource
     {
     public:
-        explicit ClientAudioSource (AudioFifo& sb) : sharedBuffer (sb) {}
+        explicit ClientAudioSource (MultiDevicePlayer& mdp) : owner (mdp) {}
 
         //======================================================================
         void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override
@@ -89,7 +92,12 @@ private:
 
         void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
         {
-            sharedBuffer.pop (bufferToFill);
+            SpinLock::ScopedTryLockType lock (owner.popMutex);
+
+            if (lock.isLocked())
+                owner.fifoBuffer.pop (bufferToFill);
+            else
+                bufferToFill.clearActiveBufferRegion();
         }
 
         void releaseResources() override
@@ -98,11 +106,13 @@ private:
         }
 
     private:
-        AudioFifo& sharedBuffer;
+        MultiDevicePlayer& owner;
 
         //======================================================================
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClientAudioSource)
     };
+
+    friend class ClientAudioSource;
 
     //==========================================================================
     MainAudioSource mainSource;

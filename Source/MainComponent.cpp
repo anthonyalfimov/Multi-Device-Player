@@ -33,8 +33,7 @@ MainComponent::MainComponent()
 
     //==========================================================================
     // Set up audio playback
-    audioOutput.setSource (this);
-    audioOutput.initialiseAudio (2);
+    audioOutput.initialiseAudio (this, 2);
 
     //==========================================================================
     // Set up device panel

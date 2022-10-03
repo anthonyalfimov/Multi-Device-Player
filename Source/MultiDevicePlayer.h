@@ -19,11 +19,8 @@ public:
     MultiDevicePlayer();
 
     //==========================================================================
-    void initialiseAudio (int numOutputChannels);
+    void initialiseAudio (AudioSource* src, int numOutputChannels);
     void shutdownAudio();
-
-    //==========================================================================
-    void setSource (AudioSource* src) { mainSource.setSource (src); }
 
     //==========================================================================
     AudioDeviceManager mainDeviceManager;

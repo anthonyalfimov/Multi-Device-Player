@@ -17,8 +17,10 @@ MultiDevicePlayer::MultiDevicePlayer()
 }
 
 //==============================================================================
-void MultiDevicePlayer::initialiseAudio (int numOutputChannels)
+void MultiDevicePlayer::initialiseAudio (AudioSource* src, int numOutputChannels)
 {
+    mainSource.setSource (src);
+
     mainDeviceManager.initialiseWithDefaultDevices (0, numOutputChannels);
     clientDeviceManager.initialiseWithDefaultDevices (0, numOutputChannels);
 
@@ -39,6 +41,8 @@ void MultiDevicePlayer::shutdownAudio()
 
     mainDeviceManager.closeAudioDevice();
     clientDeviceManager.closeAudioDevice();
+
+    mainSource.setSource (nullptr);
 }
 
 //==============================================================================

@@ -10,6 +10,8 @@
 
 #include "MultiDevicePlayer.h"
 
+// TODO: Consider handling input audio
+
 MultiDevicePlayer::MultiDevicePlayer()
     : mainSource (*this), clientSource (*this)
 {
@@ -87,12 +89,19 @@ void MultiDevicePlayer::ClientAudioSource::
 void MultiDevicePlayer::ClientAudioSource::
         getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
+    // int numSamplesWritten = 0;
+    // {
+
     SpinLock::ScopedTryLockType lock (owner.popMutex);
 
     if (lock.isLocked())
         owner.fifoBuffer.pop (bufferToFill);
     else
         bufferToFill.clearActiveBufferRegion();
+
+    // }
+    // clear samples that were not written
+    // should we only clear when numSamplesWritten < bufferToFill.numSamples ?
 }
 
 void MultiDevicePlayer::ClientAudioSource::releaseResources()

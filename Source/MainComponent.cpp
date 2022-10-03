@@ -34,11 +34,7 @@ MainComponent::MainComponent()
     //==========================================================================
     // Set up audio playback
     audioOutput.setSource (this);
-
-    // MARK: Trigger PrepareToPlay to prepare `this` AudioSource
-    // TODO: Consider initialising devices from outside MultiDevicePlayer
-    //       e.g. add initialisation method that can be called 
-    audioOutput.mainDeviceManager.initialiseWithDefaultDevices (0, 2);
+    audioOutput.initialiseAudio (2);
 
     //==========================================================================
     // Set up device panel
@@ -80,6 +76,10 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 {
+    //==========================================================================
+    // Shutdown audio
+    audioOutput.shutdownAudio();
+
     //==========================================================================
     // Release Look And Feel
     LookAndFeel::setDefaultLookAndFeel (nullptr);

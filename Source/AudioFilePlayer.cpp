@@ -43,14 +43,28 @@ void AudioFilePlayer::prepareToPlay (int samplesPerBlockExpected, double sampleR
     transportSource.prepareToPlay (samplesPerBlockExpected, sampleRate);
 }
 
-void AudioFilePlayer::releaseResources()
-{
-    transportSource.releaseResources();
-}
-
 void AudioFilePlayer::getNextAudioBlock (const AudioSourceChannelInfo& info)
 {
     transportSource.getNextAudioBlock (info);
+
+    if (! transportSource.isPlaying())
+    {
+        shouldFadeIn = true;
+        return;
+    }
+
+    if (shouldFadeIn)
+    {
+        // Just started playing, so fade in the first block:
+        const int fadeInLength = jmin (256, info.numSamples);
+        info.buffer->applyGainRamp (info.startSample, fadeInLength, 0.0f, 1.0f);
+        shouldFadeIn = false;
+    }
+}
+
+void AudioFilePlayer::releaseResources()
+{
+    transportSource.releaseResources();
 }
 
 //==============================================================================

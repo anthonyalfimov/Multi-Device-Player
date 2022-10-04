@@ -12,6 +12,8 @@
 
 #include <JuceHeader.h>
 
+// TODO: Pre-buffer the file that is playing
+
 class AudioFilePlayer  : public ChangeListener
 {
 public:
@@ -24,10 +26,8 @@ public:
     //==========================================================================
     // Audio processing
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate);
-
-    void releaseResources();
-
     void getNextAudioBlock (const AudioSourceChannelInfo& info);
+    void releaseResources();
 
     //==========================================================================
     // Player transport controls
@@ -64,6 +64,7 @@ private:
     void changeState (TransportState newState);
 
     bool isLooping = false;
+    bool shouldFadeIn = true;
 
     std::unique_ptr<AudioFormatReaderSource> readerSource;
     AudioTransportSource transportSource;

@@ -57,7 +57,18 @@ LatencyPanel::LatencyPanel (AudioFilePlayer& player, double maxLatency)
     latencySlider.setScrollWheelEnabled (false);
     latencySlider.setRange ({ -maxLatency, maxLatency }, 1.0);
     latencySlider.setTextValueSuffix (" ms");
+
+    latencySlider.onValueChange = [this]
+    {
+        latencyValue.store (static_cast<float> (latencySlider.getValue()));
+    };
+
     latencySliderLabel.setText ("Latency", dontSendNotification);
+
+    //==========================================================================
+    // Check that atomic float is lock-free
+    static_assert (std::atomic<float>::is_always_lock_free,
+                   "std::atomic for type float must be always lock free");
 }
 
 void LatencyPanel::resized()

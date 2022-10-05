@@ -29,7 +29,7 @@ public:
 
     //==========================================================================
     // Parameter access
-    Slider& getLatency() { return latencyPanel.getLatency(); }
+    std::atomic<float>* getLatency() { return latencyPanel.getLatency(); }
     bool isSyncTrackPlaying() const { return latencyPanel.isSyncTrackPlaying(); }
 
 private:

@@ -24,7 +24,8 @@ public:
 
     //==========================================================================
     // Parameter access
-    Slider& getLatency() { return latencySlider; }
+    std::atomic<float>* getLatency() { return &latencyValue; }
+    // TODO: Should this method use an atomic as well?
     bool isSyncTrackPlaying() const { return syncTrackButton.getToggleState(); }
 
 private:
@@ -34,6 +35,8 @@ private:
     TextButton syncTrackButton;
     Slider latencySlider;
     Label latencySliderLabel;
+
+    std::atomic<float> latencyValue { 0 };
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LatencyPanel)

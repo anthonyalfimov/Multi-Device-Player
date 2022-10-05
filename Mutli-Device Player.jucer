@@ -19,10 +19,10 @@
             file="Source/InterfacePanel.cpp"/>
       <FILE id="mQLyRU" name="InterfacePanel.h" compile="0" resource="0"
             file="Source/InterfacePanel.h"/>
-      <FILE id="oZsRCG" name="AudioPlayerPanel.cpp" compile="1" resource="0"
-            file="Source/AudioPlayerPanel.cpp"/>
-      <FILE id="BZFdXS" name="AudioPlayerPanel.h" compile="0" resource="0"
-            file="Source/AudioPlayerPanel.h"/>
+      <FILE id="oZsRCG" name="FilePlayerPanel.cpp" compile="1" resource="0"
+            file="Source/FilePlayerPanel.cpp"/>
+      <FILE id="BZFdXS" name="FilePlayerPanel.h" compile="0" resource="0"
+            file="Source/FilePlayerPanel.h"/>
       <FILE id="fcsuBN" name="LatencyPanel.cpp" compile="1" resource="0"
             file="Source/LatencyPanel.cpp"/>
       <FILE id="deMvcS" name="LatencyPanel.h" compile="0" resource="0" file="Source/LatencyPanel.h"/>

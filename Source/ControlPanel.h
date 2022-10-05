@@ -13,7 +13,7 @@
 #include <JuceHeader.h>
 #include "InterfacePanel.h"
 #include "LatencyPanel.h"
-#include "AudioPlayerPanel.h"
+#include "FilePlayerPanel.h"
 
 //==============================================================================
 
@@ -34,7 +34,7 @@ public:
 
 private:
     LatencyPanel latencyPanel;
-    AudioPlayerPanel filePlayerPanel;
+    FilePlayerPanel filePlayerPanel;
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ControlPanel);

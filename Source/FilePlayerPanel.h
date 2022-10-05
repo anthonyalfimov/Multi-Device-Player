@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    AudioPlayerPanel.h
+    FilePlayerPanel.h
     Created: 18 Sep 2022 7:28:15pm
     Author:  Anthony Alfimov
 
@@ -15,10 +15,10 @@
 #include "InterfacePanel.h"
 
 //==============================================================================
-class AudioPlayerPanel  : public InterfacePanel
+class FilePlayerPanel  : public InterfacePanel
 {
 public:
-    AudioPlayerPanel (AudioFilePlayer& player, AudioFormatManager& manager);
+    FilePlayerPanel (AudioFilePlayer& player, AudioFormatManager& manager);
 
     //==========================================================================
     void resized() override;

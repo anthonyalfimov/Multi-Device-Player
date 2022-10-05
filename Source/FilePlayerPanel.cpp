@@ -1,18 +1,18 @@
 /*
   ==============================================================================
 
-    AudioPlayerPanel.cpp
+    FilePlayerPanel.cpp
     Created: 18 Sep 2022 7:28:15pm
     Author:  Anthony Alfimov
 
   ==============================================================================
 */
 
-#include "AudioPlayerPanel.h"
+#include "FilePlayerPanel.h"
 
 //==============================================================================
-AudioPlayerPanel::AudioPlayerPanel (AudioFilePlayer& player, AudioFormatManager& manager)
-: filePlayer (player), formatManager (manager), transportInfo (player)
+FilePlayerPanel::FilePlayerPanel (AudioFilePlayer& player, AudioFormatManager& manager)
+    : filePlayer (player), formatManager (manager), transportInfo (player)
 {
     //==========================================================================
     // Player panel label:
@@ -97,7 +97,7 @@ AudioPlayerPanel::AudioPlayerPanel (AudioFilePlayer& player, AudioFormatManager&
     addAndMakeVisible (transportInfo);
 }
 
-void AudioPlayerPanel::resized()
+void FilePlayerPanel::resized()
 {
     // Manage panel hight
     int requiredHeight = 3 * (buttonHeight + padding) + 2 * padding;
@@ -147,7 +147,7 @@ void AudioPlayerPanel::resized()
     transportInfo.setBounds (transportButtonsBounds.removeFromRight (buttonWidth));
 }
 
-void AudioPlayerPanel::fileButtonClicked()
+void FilePlayerPanel::fileButtonClicked()
 {
     fileChooser
     = std::make_unique<FileChooser> ("Select a file to play...",
@@ -179,7 +179,7 @@ void AudioPlayerPanel::fileButtonClicked()
 
 //==============================================================================
 
-AudioPlayerPanel::TransportStateInfo::TransportStateInfo (const AudioFilePlayer& player)
+FilePlayerPanel::TransportStateInfo::TransportStateInfo (const AudioFilePlayer& player)
     : filePlayer (player)
 {
     addAndMakeVisible (currentPositionLabel);
@@ -189,18 +189,18 @@ AudioPlayerPanel::TransportStateInfo::TransportStateInfo (const AudioFilePlayer&
     startTimer (100);
 }
 
-void AudioPlayerPanel::TransportStateInfo::paint (Graphics& g)
+void FilePlayerPanel::TransportStateInfo::paint (Graphics& g)
 {
     g.setColour (getLookAndFeel().findColour (Slider::textBoxOutlineColourId));
     g.drawRect (getLocalBounds());
 }
 
-void AudioPlayerPanel::TransportStateInfo::resized()
+void FilePlayerPanel::TransportStateInfo::resized()
 {
     currentPositionLabel.setBounds (getLocalBounds());
 }
 
-void AudioPlayerPanel::TransportStateInfo::timerCallback()
+void FilePlayerPanel::TransportStateInfo::timerCallback()
 {
     if (filePlayer.getTransportState() != AudioFilePlayer::TransportState::Playing)
     {

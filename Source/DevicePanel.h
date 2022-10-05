@@ -25,6 +25,10 @@ public:
     void resized() override;
 
     //==========================================================================
+    void setDeviceSelectorEnabled (bool shouldBeEnabled);
+    bool isDeviceSelectorEnabled() const;
+
+    //==========================================================================
     void componentMovedOrResized (Component&, bool wasMoved, bool wasResized) override;
 
 private:

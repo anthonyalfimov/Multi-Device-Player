@@ -48,18 +48,18 @@ private:
     public:
         explicit TransportStateInfo (const AudioFilePlayer& audioPlayer);
 
-        //==========================================================================
+        //======================================================================
         void paint (Graphics& g) override;
         void resized() override;
 
-        //==========================================================================
+        //======================================================================
         void timerCallback() override;
 
     private:
         const AudioFilePlayer& filePlayer;
         Label currentPositionLabel;
 
-        //==========================================================================
+        //======================================================================
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TransportStateInfo);
     };
 
@@ -67,4 +67,7 @@ private:
     TextButton stopButton;
     ToggleButton loopingToggle;
     TransportStateInfo transportInfo;
+
+    //==========================================================================
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FilePlayerPanel);
 };

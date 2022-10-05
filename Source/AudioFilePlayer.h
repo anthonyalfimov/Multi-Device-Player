@@ -12,7 +12,8 @@
 
 #include <JuceHeader.h>
 
-// TODO: Pre-buffer the file that is playing
+// TODO: Pre-buffer the file that is playing?
+// TODO: Examine thread-safety of this class (use thread sanitiser?)
 
 class AudioFilePlayer  : public ChangeListener
 {
@@ -38,7 +39,21 @@ public:
     //==========================================================================
     // Player transport state
     bool readyToPlay() const { return (readerSource != nullptr); }
+    bool isPlaying() const { return transportSource.isPlaying(); }
+    bool isLooping() const { return transportSource.isLooping(); }
+    double getCurrentPosition() const { return transportSource.getCurrentPosition(); }
 
+    //==========================================================================
+    // Transport state change callbacks
+    std::function<void()> onTransportStarted;
+    std::function<void()> onTransportPaused;
+    std::function<void()> onTransportStopped;
+
+    //==========================================================================
+    // Register a listener to receive change callbacks
+    void addChangeListener (ChangeListener* listener);
+
+private:
     enum class TransportState
     {
         Stopped,
@@ -49,26 +64,18 @@ public:
         Stopping
     };
 
-    TransportState getTransportState() const { return state; }
-    double getCurrentPosition() const { return transportSource.getCurrentPosition(); }
-
-    std::function<void()> onTransportStarted;
-    std::function<void()> onTransportPaused;
-    std::function<void()> onTransportStopped;
-
-    //==========================================================================
-    // Change listener callback
-    void changeListenerCallback (ChangeBroadcaster* source) override;
-
-private:
     void changeState (TransportState newState);
 
-    bool isLooping = false;
+    bool looping = false;
     bool shouldFadeIn = true;
 
     std::unique_ptr<AudioFormatReaderSource> readerSource;
     AudioTransportSource transportSource;
     TransportState state = TransportState::Stopped;
+
+    //==========================================================================
+    // Change listener callback
+    void changeListenerCallback (ChangeBroadcaster* source) override;
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioFilePlayer);

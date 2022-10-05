@@ -64,6 +64,9 @@ MainComponent::MainComponent()
     // Set up transport management facilities
     formatManager.registerBasicFormats();
 
+    filePlayer.addChangeListener (&deviceSelectorUpdater);
+    syncPlayer.addChangeListener (&deviceSelectorUpdater);
+
     //==========================================================================
     // Set up sync track
     syncPlayer.setAudioFormatReader (formatManager.createReaderFor
@@ -148,4 +151,14 @@ void MainComponent::resized()
 
     if (controlPanelViewport.getViewHeight() < controlPanel->getHeight())
         controlPanelViewport.setBounds (bounds.withTrimmedRight (-3));
+}
+
+//==============================================================================
+void MainComponent::DeviceSelectorUpdater::
+        changeListenerCallback (ChangeBroadcaster* source)
+{
+    if (owner->filePlayer.isPlaying() || owner->syncPlayer.isPlaying())
+        owner->devicePanel->setDeviceSelectorEnabled (false);
+    else
+        owner->devicePanel->setDeviceSelectorEnabled (true);
 }

@@ -69,6 +69,18 @@ void DevicePanel::resized()
 }
 
 //==============================================================================
+void DevicePanel::setDeviceSelectorEnabled (bool shouldBeEnabled)
+{
+    mainSelectorPanel.setEnabled (shouldBeEnabled);
+    linkedSelectorPanel.setEnabled (shouldBeEnabled);
+}
+
+bool DevicePanel::isDeviceSelectorEnabled() const
+{
+    return mainSelectorPanel.isEnabled() && linkedSelectorPanel.isEnabled();
+}
+
+//==============================================================================
 void DevicePanel::componentMovedOrResized (Component& component,
                                            bool wasMoved,
                                            bool wasResized)

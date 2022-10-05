@@ -31,7 +31,7 @@ void AudioFilePlayer::setAudioFormatReader (AudioFormatReader* reader)
     readerSource.reset (newSource.release());
 
     // Update looping status of the new readerSource:
-    readerSource->setLooping (isLooping);
+    readerSource->setLooping (looping);
 
     // Stop transport:
     changeState (TransportState::Stopped);
@@ -89,24 +89,16 @@ void AudioFilePlayer::stop()
 
 void AudioFilePlayer::setLooping (bool shouldLoop)
 {
-    isLooping = shouldLoop;
+    looping = shouldLoop;
 
     if (readerSource.get() != nullptr)
-        readerSource->setLooping (isLooping);
+        readerSource->setLooping (looping);
 }
 
 //==============================================================================
-void AudioFilePlayer::changeListenerCallback (ChangeBroadcaster* source)
+void AudioFilePlayer::addChangeListener (ChangeListener* listener)
 {
-    if (source != &transportSource)
-        return;
-
-    if (transportSource.isPlaying())
-        changeState (TransportState::Playing);
-    else if ((state == TransportState::Stopping) || (state == TransportState::Playing))
-        changeState (TransportState::Stopped);
-    else if (state == TransportState::Pausing)
-        changeState (TransportState::Paused);
+    transportSource.addChangeListener (listener);
 }
 
 //==============================================================================
@@ -154,4 +146,18 @@ void AudioFilePlayer::changeState (TransportState newState)
         default:
             break;
     }
+}
+
+//==============================================================================
+void AudioFilePlayer::changeListenerCallback (ChangeBroadcaster* source)
+{
+    if (source != &transportSource)
+        return;
+
+    if (transportSource.isPlaying())
+        changeState (TransportState::Playing);
+    else if ((state == TransportState::Stopping) || (state == TransportState::Playing))
+        changeState (TransportState::Stopped);
+    else if (state == TransportState::Pausing)
+        changeState (TransportState::Paused);
 }

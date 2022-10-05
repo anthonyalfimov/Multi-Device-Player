@@ -75,6 +75,20 @@ private:
     std::unique_ptr<ControlPanel> controlPanel;
 
     //==========================================================================
+    // Updating Device Selector state
+    class DeviceSelectorUpdater  : public ChangeListener
+    {
+    public:
+        DeviceSelectorUpdater (MainComponent* mc) : owner (mc) {}
+        void changeListenerCallback (ChangeBroadcaster* source);
+
+    private:
+        MainComponent* owner;
+    };
+
+    DeviceSelectorUpdater deviceSelectorUpdater { this };
+
+    //==========================================================================
     // UI Style
     AppLookAndFeel lookAndFeel;
 

@@ -202,7 +202,7 @@ void FilePlayerPanel::TransportStateInfo::resized()
 
 void FilePlayerPanel::TransportStateInfo::timerCallback()
 {
-    if (filePlayer.getTransportState() != AudioFilePlayer::TransportState::Playing)
+    if (! filePlayer.isPlaying())
     {
         currentPositionLabel.setText ("Stopped", dontSendNotification);
         return;

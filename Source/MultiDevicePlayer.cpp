@@ -13,7 +13,7 @@
 // TODO: Consider handling input audio
 
 MultiDevicePlayer::MultiDevicePlayer()
-    : mainSource (*this), clientSource (*this)
+    : mainSource (*this), linkedSource (*this)
 {
 
 }
@@ -24,25 +24,25 @@ void MultiDevicePlayer::initialiseAudio (AudioSource* src, int numOutputChannels
     mainSource.setSource (src);
 
     mainDeviceManager.initialiseWithDefaultDevices (0, numOutputChannels);
-    clientDeviceManager.initialiseWithDefaultDevices (0, numOutputChannels);
+    linkedDeviceManager.initialiseWithDefaultDevices (0, numOutputChannels);
 
     mainDeviceManager.addAudioCallback (&mainSourcePlayer);
-    clientDeviceManager.addAudioCallback (&clientSourcePlayer);
+    linkedDeviceManager.addAudioCallback (&linkedSourcePlayer);
 
     mainSourcePlayer.setSource (&mainSource);
-    clientSourcePlayer.setSource (&clientSource);
+    linkedSourcePlayer.setSource (&linkedSource);
 }
 
 void MultiDevicePlayer::shutdownAudio()
 {
     mainSourcePlayer.setSource (nullptr);
-    clientSourcePlayer.setSource (nullptr);
+    linkedSourcePlayer.setSource (nullptr);
 
     mainDeviceManager.removeAudioCallback (&mainSourcePlayer);
-    clientDeviceManager.removeAudioCallback (&clientSourcePlayer);
+    linkedDeviceManager.removeAudioCallback (&linkedSourcePlayer);
 
     mainDeviceManager.closeAudioDevice();
-    clientDeviceManager.closeAudioDevice();
+    linkedDeviceManager.closeAudioDevice();
 
     mainSource.setSource (nullptr);
 }
@@ -80,13 +80,13 @@ void MultiDevicePlayer::MainAudioSource::releaseResources()
 }
 
 //==============================================================================
-void MultiDevicePlayer::ClientAudioSource::
+void MultiDevicePlayer::LinkedAudioSource::
         prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
 
 }
 
-void MultiDevicePlayer::ClientAudioSource::
+void MultiDevicePlayer::LinkedAudioSource::
         getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
     // int numSamplesWritten = 0;
@@ -104,7 +104,7 @@ void MultiDevicePlayer::ClientAudioSource::
     // should we only clear when numSamplesWritten < bufferToFill.numSamples ?
 }
 
-void MultiDevicePlayer::ClientAudioSource::releaseResources()
+void MultiDevicePlayer::LinkedAudioSource::releaseResources()
 {
 
 }

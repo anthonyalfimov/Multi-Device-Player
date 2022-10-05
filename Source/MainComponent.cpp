@@ -38,7 +38,7 @@ MainComponent::MainComponent()
     //==========================================================================
     // Set up device panel
     devicePanel = std::make_unique<DevicePanel> (audioOutput.mainDeviceManager,
-                                                 audioOutput.clientDeviceManager);
+                                                 audioOutput.linkedDeviceManager);
 
     addAndMakeVisible (devicePanelViewport);
     devicePanelViewport.setViewedComponent (devicePanel.get(), false);

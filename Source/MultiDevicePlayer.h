@@ -24,11 +24,11 @@ public:
 
     //==========================================================================
     AudioDeviceManager mainDeviceManager;
-    AudioDeviceManager clientDeviceManager;
+    AudioDeviceManager linkedDeviceManager;
 
 private:
     AudioSourcePlayer mainSourcePlayer;
-    AudioSourcePlayer clientSourcePlayer;
+    AudioSourcePlayer linkedSourcePlayer;
 
     AudioFifo fifoBuffer;
     SpinLock popMutex;
@@ -55,10 +55,10 @@ private:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainAudioSource)
     };
 
-    class ClientAudioSource  : public AudioSource
+    class LinkedAudioSource  : public AudioSource
     {
     public:
-        explicit ClientAudioSource (MultiDevicePlayer& mdp) : owner (mdp) {}
+        explicit LinkedAudioSource (MultiDevicePlayer& mdp) : owner (mdp) {}
 
         //======================================================================
         void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
@@ -69,15 +69,15 @@ private:
         MultiDevicePlayer& owner;
 
         //======================================================================
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ClientAudioSource)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LinkedAudioSource)
     };
 
     friend class MainAudioSource;
-    friend class ClientAudioSource;
+    friend class LinkedAudioSource;
 
     //==========================================================================
     MainAudioSource mainSource;
-    ClientAudioSource clientSource;
+    LinkedAudioSource linkedSource;
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MultiDevicePlayer)

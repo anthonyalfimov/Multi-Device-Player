@@ -109,7 +109,13 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
     */
     ScopedNoDenormals noDenormals;
 
-    if (filePlayer.readyToPlay())
+    // TODO: Crossfade or pause filePlayer when syncPlayer is playing
+    // TODO: syncPlayer stops playing before it can properly stop
+    //       One more block is needed to properly finish playback and fade out
+
+    if (syncPlayer.readyToPlay() && syncPlayer.isPlaying())
+        syncPlayer.getNextAudioBlock (bufferToFill);
+    else if (filePlayer.readyToPlay())
         filePlayer.getNextAudioBlock (bufferToFill);
     else
         bufferToFill.clearActiveBufferRegion();

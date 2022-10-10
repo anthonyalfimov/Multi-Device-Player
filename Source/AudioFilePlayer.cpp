@@ -45,6 +45,12 @@ void AudioFilePlayer::prepareToPlay (int samplesPerBlockExpected, double sampleR
 
 void AudioFilePlayer::getNextAudioBlock (const AudioSourceChannelInfo& info)
 {
+    if (readerSource == nullptr)
+    {
+        info.clearActiveBufferRegion();
+        return;
+    }
+
     transportSource.getNextAudioBlock (info);
 
     if (! transportSource.isPlaying())

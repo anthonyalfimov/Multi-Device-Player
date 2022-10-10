@@ -59,8 +59,12 @@ private:
 
     AudioBuffer<float> crossfadeBuffer;
 
-    bool shouldFadeOutFile = false;
-    bool shouldFadeInFile = false;
+    bool shouldFadeToSync = false;
+    bool shouldFadeFromSync = false;
+
+    void fadeAudioSource (const AudioSourceChannelInfo& bufferToFill,
+                          AudioSource& sourceToFade,
+                          bool shouldFadeIn);
 
     //==========================================================================
     // Audio Processing

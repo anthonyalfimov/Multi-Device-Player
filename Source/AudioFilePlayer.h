@@ -15,7 +15,8 @@
 // TODO: Pre-buffer the file that is playing?
 // TODO: Examine thread-safety of this class (use thread sanitiser?)
 
-class AudioFilePlayer  : public ChangeListener
+class AudioFilePlayer  : public AudioSource,
+                         public ChangeListener
 {
 public:
     AudioFilePlayer();
@@ -26,9 +27,9 @@ public:
 
     //==========================================================================
     // Audio processing
-    void prepareToPlay (int samplesPerBlockExpected, double sampleRate);
-    void getNextAudioBlock (const AudioSourceChannelInfo& info);
-    void releaseResources();
+    void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
+    void getNextAudioBlock (const AudioSourceChannelInfo& info) override;
+    void releaseResources() override;
 
     //==========================================================================
     // Player transport controls
@@ -38,7 +39,6 @@ public:
 
     //==========================================================================
     // Player transport state
-    bool readyToPlay() const { return (readerSource != nullptr); }
     bool isPlaying() const { return transportSource.isPlaying(); }
     bool isLooping() const { return transportSource.isLooping(); }
     double getCurrentPosition() const { return transportSource.getCurrentPosition(); }

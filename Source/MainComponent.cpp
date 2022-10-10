@@ -113,86 +113,28 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
 
     if (syncPlayer.isPlaying())
     {
+        shouldFadeFromSync = true;
         syncPlayer.getNextAudioBlock (bufferToFill);
-        shouldFadeInFile = true;
 
-        if (shouldFadeOutFile)
+        if (shouldFadeToSync)
         {
-            AudioSourceChannelInfo crossfadeInfo (&crossfadeBuffer,
-                                                  bufferToFill.startSample,
-                                                  bufferToFill.numSamples);
-            filePlayer.getNextAudioBlock (crossfadeInfo);
-
-            const int fadeLength = jmin (256, bufferToFill.numSamples);
-            crossfadeBuffer.applyGainRamp (bufferToFill.startSample,
-                                           fadeLength,
-                                           1.0f, 0.0f);
-
-            if (bufferToFill.numSamples > 256)
-            {
-                crossfadeBuffer.clear (bufferToFill.startSample + 256,
-                                       bufferToFill.numSamples - 256);
-            }
-
-            const int numChannels = jmin (crossfadeBuffer.getNumChannels(),
-                                          bufferToFill.buffer->getNumChannels());
-
-            for (int ch = 0; ch < numChannels; ++ch)
-            {
-                bufferToFill.buffer->addFrom (ch,
-                                              bufferToFill.startSample,
-                                              crossfadeBuffer,
-                                              ch,
-                                              bufferToFill.startSample,
-                                              bufferToFill.numSamples);
-            }
-
-            shouldFadeOutFile = false;
-        }
-    }
-    else if (filePlayer.readyToPlay())
-    {
-        filePlayer.getNextAudioBlock (bufferToFill);
-        shouldFadeOutFile = true;
-
-        if (shouldFadeInFile)
-        {
-            AudioSourceChannelInfo crossfadeInfo (&crossfadeBuffer,
-                                                  bufferToFill.startSample,
-                                                  bufferToFill.numSamples);
-            syncPlayer.getNextAudioBlock (crossfadeInfo);
-
-            const int fadeLength = jmin (256, bufferToFill.numSamples);
-            bufferToFill.buffer->applyGainRamp (bufferToFill.startSample,
-                                                fadeLength,
-                                                0.0f, 1.0f);
-
-            const int numChannels = jmin (crossfadeBuffer.getNumChannels(),
-                                          bufferToFill.buffer->getNumChannels());
-
-            for (int ch = 0; ch < numChannels; ++ch)
-            {
-                bufferToFill.buffer->addFrom (ch,
-                                              bufferToFill.startSample,
-                                              crossfadeBuffer,
-                                              ch,
-                                              bufferToFill.startSample,
-                                              bufferToFill.numSamples);
-            }
-
-            shouldFadeInFile = false;
+            fadeAudioSource (bufferToFill, filePlayer, false);
+            shouldFadeToSync = false;
         }
     }
     else
     {
-        if (shouldFadeInFile)
+        shouldFadeToSync = true;
+
+        if (shouldFadeFromSync)
         {
             syncPlayer.getNextAudioBlock (bufferToFill);
-            shouldFadeInFile = false;
+            fadeAudioSource (bufferToFill, filePlayer, true);
+            shouldFadeFromSync = false;
         }
         else
         {
-            bufferToFill.clearActiveBufferRegion();
+            filePlayer.getNextAudioBlock (bufferToFill);
         }
     }
 }
@@ -231,6 +173,49 @@ void MainComponent::resized()
 
     if (controlPanelViewport.getViewHeight() < controlPanel->getHeight())
         controlPanelViewport.setBounds (bounds.withTrimmedRight (-3));
+}
+
+//==============================================================================
+void MainComponent::fadeAudioSource (const AudioSourceChannelInfo& bufferToFill,
+                                     AudioSource& sourceToFade,
+                                     bool shouldFadeIn)
+{
+    AudioSourceChannelInfo crossfadeInfo (&crossfadeBuffer,
+                                          bufferToFill.startSample,
+                                          bufferToFill.numSamples);
+    sourceToFade.getNextAudioBlock (crossfadeInfo);
+
+    const int fadeLength = jmin (256, bufferToFill.numSamples);
+
+    if (shouldFadeIn)
+    {
+        // Fade buffer in
+        crossfadeBuffer.applyGainRamp (bufferToFill.startSample, fadeLength, 0.0f, 1.0f);
+    }
+    else
+    {
+        // Fade buffer out
+        crossfadeBuffer.applyGainRamp (bufferToFill.startSample, fadeLength, 1.0f, 0.0f);
+
+        if (bufferToFill.numSamples > 256)
+        {
+            crossfadeBuffer.clear (bufferToFill.startSample + 256,
+                                   bufferToFill.numSamples - 256);
+        }
+    }
+
+    const int numChannels = jmin (crossfadeBuffer.getNumChannels(),
+                                  bufferToFill.buffer->getNumChannels());
+
+    for (int ch = 0; ch < numChannels; ++ch)
+    {
+        bufferToFill.buffer->addFrom (ch,
+                                      bufferToFill.startSample,
+                                      crossfadeBuffer,
+                                      ch,
+                                      bufferToFill.startSample,
+                                      bufferToFill.numSamples);
+    }
 }
 
 //==============================================================================

@@ -12,10 +12,13 @@
 
 // TODO: Consider handling input audio
 
-MultiDevicePlayer::MultiDevicePlayer()
-    : mainSource (*this), linkedSource (*this)
+MultiDevicePlayer::MultiDevicePlayer (double maxLatencyInMs)
+    : maxLatency (maxLatencyInMs), mainSource (*this), linkedSource (*this)
 {
-
+    //==========================================================================
+    // Check that atomic float is lock-free
+    static_assert (std::atomic<float>::is_always_lock_free,
+                   "std::atomic for type float must be always lock free");
 }
 
 //==============================================================================
@@ -48,27 +51,47 @@ void MultiDevicePlayer::shutdownAudio()
 }
 
 //==============================================================================
-void MultiDevicePlayer::MainAudioSource
-        ::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
+MultiDevicePlayer::MainAudioSource::MainAudioSource (MultiDevicePlayer& mdp)
+    : owner (mdp)
+{
+    
+}
+
+void MultiDevicePlayer::MainAudioSource::
+        prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
     if (source != nullptr)
         source->prepareToPlay (samplesPerBlockExpected, sampleRate);
 
-    // TODO:  Determine the number of channels based on device configuration
-    // TODO:  Consider using a function for buffer size?
+    const int numChannels = owner.mainDeviceManager
+        .getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
+    delay.setDelayBufferSize (numChannels, owner.maxLatency);
+    delay.prepareToPlay (samplesPerBlockExpected, sampleRate);
+
     SpinLock::ScopedLockType lock (owner.popMutex);
-    owner.fifoBuffer.setSize (2, samplesPerBlockExpected * 4);
+    owner.fifoBuffer.setSize (numChannels, samplesPerBlockExpected * 4);
 }
 
 void MultiDevicePlayer::MainAudioSource::
         getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
+    // Process audio and push it to the shared buffer
     if (source != nullptr)
         source->getNextAudioBlock (bufferToFill);
     else
         bufferToFill.clearActiveBufferRegion();
 
     owner.fifoBuffer.push (bufferToFill);
+
+    // Delay audio for latency compensation
+    const float latencyValue = owner.latency.load();
+
+    if (latencyValue > 0.0)
+        delay.setDelayInMs (latencyValue);
+    else
+        delay.setDelayInMs (0.0f);
+
+    delay.getNextAudioBlock (bufferToFill);
 }
 
 void MultiDevicePlayer::MainAudioSource::releaseResources()
@@ -76,36 +99,51 @@ void MultiDevicePlayer::MainAudioSource::releaseResources()
     if (source != nullptr)
         source->releaseResources();
 
-    //sharedBuffer.reset();
+    delay.releaseResources();
 }
 
 //==============================================================================
+MultiDevicePlayer::LinkedAudioSource::LinkedAudioSource (MultiDevicePlayer& mdp)
+    : owner (mdp)
+{
+
+}
+
 void MultiDevicePlayer::LinkedAudioSource::
         prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
-
+    const int numChannels = owner.linkedDeviceManager
+        .getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
+    delay.setDelayBufferSize (numChannels, owner.maxLatency);
+    delay.prepareToPlay (samplesPerBlockExpected, sampleRate);
 }
 
 void MultiDevicePlayer::LinkedAudioSource::
         getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
-    // int numSamplesWritten = 0;
-    // {
+    // Pop audio from the shared buffer
+    {
+        SpinLock::ScopedTryLockType lock (owner.popMutex);
 
-    SpinLock::ScopedTryLockType lock (owner.popMutex);
+        if (lock.isLocked())
+            owner.fifoBuffer.pop (bufferToFill);
+        else
+            bufferToFill.clearActiveBufferRegion();
+    }
 
-    if (lock.isLocked())
-        owner.fifoBuffer.pop (bufferToFill);
+    // Delay audio for latency compensation
+    const float latencyValue = owner.latency.load();
+
+    if (latencyValue < 0.0)
+        delay.setDelayInMs (-latencyValue);
     else
-        bufferToFill.clearActiveBufferRegion();
+        delay.setDelayInMs (0.0f);
 
-    // }
-    // clear samples that were not written
-    // should we only clear when numSamplesWritten < bufferToFill.numSamples ?
+    delay.getNextAudioBlock (bufferToFill);
 }
 
 void MultiDevicePlayer::LinkedAudioSource::releaseResources()
 {
-
+    delay.releaseResources();
 }
 

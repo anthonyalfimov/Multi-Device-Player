@@ -23,14 +23,13 @@ public:
     ControlPanel (AudioFilePlayer& syncPlayer,
                   AudioFilePlayer& filePlayer,
                   AudioFormatManager& manager,
-                  double maxLatency);
+                  double maxLatencyInMs);
 
     void resized() override;
 
     //==========================================================================
-    // Parameter access
-    std::atomic<float>* getLatency() { return latencyPanel.getLatency(); }
-    bool isSyncTrackPlaying() const { return latencyPanel.isSyncTrackPlaying(); }
+    // Parameter attachment
+    void attachLatencyParameter (std::atomic<float>* latency);
 
 private:
     LatencyPanel latencyPanel;

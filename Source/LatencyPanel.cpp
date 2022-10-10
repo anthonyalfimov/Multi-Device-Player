@@ -12,7 +12,7 @@
 #include "LatencyPanel.h"
 
 //==============================================================================
-LatencyPanel::LatencyPanel (AudioFilePlayer& player, double maxLatency)
+LatencyPanel::LatencyPanel (AudioFilePlayer& player, double maxLatencyInMs)
     : syncPlayer (player)
 {
     // Latency panel label:
@@ -55,20 +55,9 @@ LatencyPanel::LatencyPanel (AudioFilePlayer& player, double maxLatency)
     latencySlider.setTextBoxStyle (Slider::TextBoxRight, false, 100, 20);
     latencySlider.setDoubleClickReturnValue (true, 0.0);
     latencySlider.setScrollWheelEnabled (false);
-    latencySlider.setRange ({ -maxLatency, maxLatency }, 1.0);
+    latencySlider.setRange ({ -maxLatencyInMs, maxLatencyInMs }, 1.0);
     latencySlider.setTextValueSuffix (" ms");
-
-    latencySlider.onValueChange = [this]
-    {
-        latencyValue.store (static_cast<float> (latencySlider.getValue()));
-    };
-
     latencySliderLabel.setText ("Latency", dontSendNotification);
-
-    //==========================================================================
-    // Check that atomic float is lock-free
-    static_assert (std::atomic<float>::is_always_lock_free,
-                   "std::atomic for type float must be always lock free");
 }
 
 void LatencyPanel::resized()
@@ -94,4 +83,12 @@ void LatencyPanel::resized()
                      bounds.removeFromTop (buttonHeight + padding)
                            .withTrimmedTop (padding)
                            .withTrimmedLeft (padding));
+}
+
+void LatencyPanel::attachLatencyParameter (std::atomic<float>* latency)
+{
+    latencySlider.onValueChange = [latency, this]
+    {
+        latency->store (static_cast<float> (latencySlider.getValue()));
+    };
 }

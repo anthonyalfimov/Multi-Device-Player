@@ -12,32 +12,56 @@
 
 #include <JuceHeader.h>
 #include "AudioFifo.h"
+#include "DelayAudioSource.h"
 
 class MultiDevicePlayer
 {
 public:
-    MultiDevicePlayer();
+    explicit MultiDevicePlayer (double maxLatencyInMs);
 
     //==========================================================================
     void initialiseAudio (AudioSource* src, int numOutputChannels);
     void shutdownAudio();
 
     //==========================================================================
+    /** [Realtime] [Thread-safe]
+        Returns a pointer to the atomic latency compensation value. Latency
+        between Main and Linked devices is set in milliseconds.
+
+        If latency parameter is positive, the Main device will be delayed by
+        the given amount of milliseconds.
+
+        If latency parameter is negative, the Linked device will be delayed
+        by an absolute value of the given time in milliseconds.
+    */
+    std::atomic<float>* getLatencyParameter() { return &latency; }
+
+    //==========================================================================
+    // Device managers
     AudioDeviceManager mainDeviceManager;
     AudioDeviceManager linkedDeviceManager;
 
 private:
-    AudioSourcePlayer mainSourcePlayer;
-    AudioSourcePlayer linkedSourcePlayer;
+    // Latency compensation
+    std::atomic<float> latency { 0.0f };    // [ms]
+    const double maxLatency;
 
+    //==========================================================================
+    // Shared audio buffer facilities
     AudioFifo fifoBuffer;
     SpinLock popMutex;
 
     //==========================================================================
+    // Objects for streaming audio from an audio source to managed devices
+    AudioSourcePlayer mainSourcePlayer;
+    AudioSourcePlayer linkedSourcePlayer;
+
+    //==========================================================================
+    // Audio sources for managed devices
     class MainAudioSource  : public AudioSource
     {
     public:
-        explicit MainAudioSource (MultiDevicePlayer& mdp) : owner (mdp) {}
+        MainAudioSource (MultiDevicePlayer& mdp);
 
         //======================================================================
         void setSource (AudioSource* src) { source = src; }
@@ -48,8 +72,9 @@ private:
         void releaseResources() override;
 
     private:
-        AudioSource* source = nullptr;
         MultiDevicePlayer& owner;
+        DelayAudioSource delay;
+        AudioSource* source = nullptr;
 
         //======================================================================
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainAudioSource)
@@ -58,7 +83,7 @@ private:
     class LinkedAudioSource  : public AudioSource
     {
     public:
-        explicit LinkedAudioSource (MultiDevicePlayer& mdp) : owner (mdp) {}
+        explicit LinkedAudioSource (MultiDevicePlayer& mdp);
 
         //======================================================================
         void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
@@ -67,6 +92,7 @@ private:
 
     private:
         MultiDevicePlayer& owner;
+        DelayAudioSource delay;
 
         //======================================================================
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LinkedAudioSource)

@@ -39,6 +39,10 @@
             file="Source/AudioFilePlayer.cpp"/>
       <FILE id="PM7wnT" name="AudioFilePlayer.h" compile="0" resource="0"
             file="Source/AudioFilePlayer.h"/>
+      <FILE id="irPhnr" name="DelayAudioSource.cpp" compile="1" resource="0"
+            file="Source/DelayAudioSource.cpp"/>
+      <FILE id="ILAqRG" name="DelayAudioSource.h" compile="0" resource="0"
+            file="Source/DelayAudioSource.h"/>
       <FILE id="uzukBv" name="MultiDevicePlayer.cpp" compile="1" resource="0"
             file="Source/MultiDevicePlayer.cpp"/>
       <FILE id="yYYgBz" name="MultiDevicePlayer.h" compile="0" resource="0"

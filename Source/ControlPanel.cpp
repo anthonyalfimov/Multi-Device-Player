@@ -14,8 +14,8 @@
 ControlPanel::ControlPanel (AudioFilePlayer& syncPlayer,
                             AudioFilePlayer& filePlayer,
                             AudioFormatManager& manager,
-                            double maxLatency)
-    : latencyPanel (syncPlayer, maxLatency),
+                            double maxLatencyInMs)
+    : latencyPanel (syncPlayer, maxLatencyInMs),
       filePlayerPanel (filePlayer, manager)
 {
     addAndMakeVisible (latencyPanel);
@@ -35,4 +35,9 @@ void ControlPanel::resized()
     // Set panel bounds
     latencyPanel.setBounds (bounds.removeFromTop (latencyPanel.getHeight()));
     filePlayerPanel.setBounds (bounds.removeFromTop (filePlayerPanel.getHeight()));
+}
+
+void ControlPanel::attachLatencyParameter (std::atomic<float>* latency)
+{
+    latencyPanel.attachLatencyParameter (latency);
 }

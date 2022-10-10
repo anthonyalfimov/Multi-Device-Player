@@ -18,25 +18,24 @@
 class LatencyPanel  : public InterfacePanel
 {
 public:
-    explicit LatencyPanel (AudioFilePlayer& player, double maxLatency);
+    explicit LatencyPanel (AudioFilePlayer& player, double maxLatencyInMs);
 
+    //==========================================================================
     void resized() override;
 
     //==========================================================================
-    // Parameter access
-    std::atomic<float>* getLatency() { return &latencyValue; }
-    // TODO: Should this method use an atomic as well?
-    bool isSyncTrackPlaying() const { return syncTrackButton.getToggleState(); }
+    // Parameter attachment
+    void attachLatencyParameter (std::atomic<float>* latency);
 
 private:
     AudioFilePlayer& syncPlayer;
 
+    //==========================================================================
+    // UI Components
     Label latencyPanelLabel;
     TextButton syncTrackButton;
     Slider latencySlider;
     Label latencySliderLabel;
-
-    std::atomic<float> latencyValue { 0 };
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LatencyPanel)

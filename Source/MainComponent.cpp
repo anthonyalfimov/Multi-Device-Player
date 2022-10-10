@@ -24,7 +24,7 @@
 #include "InterfacePanel.h"
 
 //==============================================================================
-MainComponent::MainComponent()
+MainComponent::MainComponent() : audioOutput (maxLatencyInMs)
 {
     //==========================================================================
     // Update Look And Feel
@@ -48,6 +48,7 @@ MainComponent::MainComponent()
     // Set up control panel
     controlPanel = std::make_unique<ControlPanel> (syncPlayer, filePlayer,
                                                    formatManager, maxLatencyInMs);
+    controlPanel->attachLatencyParameter (audioOutput.getLatencyParameter());
 
     addAndMakeVisible (controlPanelViewport);
     controlPanelViewport.setViewedComponent (controlPanel.get(), false);

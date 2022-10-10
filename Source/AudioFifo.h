@@ -80,8 +80,6 @@ private:
     AbstractFifo fifoManager { defaultSize };
     AudioBuffer<float> buffer { 2, defaultSize };
 
-//    SpinLock bufferMutex;
-
     inline static constexpr int defaultSize = 512;
 
     //==========================================================================

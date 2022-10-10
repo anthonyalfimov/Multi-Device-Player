@@ -92,11 +92,13 @@ MainComponent::~MainComponent()
 //==============================================================================
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
-    // This function will be called when the audio device is started, or when
-    // its settings (i.e. sample rate, block size, etc) are changed.
-
     syncPlayer.prepareToPlay (samplesPerBlockExpected, sampleRate);
     filePlayer.prepareToPlay (samplesPerBlockExpected, sampleRate);
+
+    const auto numChannels = audioOutput.mainDeviceManager
+        .getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
+
+    crossfadeBuffer.setSize (numChannels, samplesPerBlockExpected, false, true);
 }
 
 void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
@@ -109,23 +111,94 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
     */
     ScopedNoDenormals noDenormals;
 
-    // TODO: Crossfade or pause filePlayer when syncPlayer is playing
-    // TODO: syncPlayer stops playing before it can properly stop
-    //       One more block is needed to properly finish playback and fade out
-
-    if (syncPlayer.readyToPlay() && syncPlayer.isPlaying())
+    if (syncPlayer.isPlaying())
+    {
         syncPlayer.getNextAudioBlock (bufferToFill);
+        shouldFadeInFile = true;
+
+        if (shouldFadeOutFile)
+        {
+            AudioSourceChannelInfo crossfadeInfo (&crossfadeBuffer,
+                                                  bufferToFill.startSample,
+                                                  bufferToFill.numSamples);
+            filePlayer.getNextAudioBlock (crossfadeInfo);
+
+            const int fadeLength = jmin (256, bufferToFill.numSamples);
+            crossfadeBuffer.applyGainRamp (bufferToFill.startSample,
+                                           fadeLength,
+                                           1.0f, 0.0f);
+
+            if (bufferToFill.numSamples > 256)
+            {
+                crossfadeBuffer.clear (bufferToFill.startSample + 256,
+                                       bufferToFill.numSamples - 256);
+            }
+
+            const int numChannels = jmin (crossfadeBuffer.getNumChannels(),
+                                          bufferToFill.buffer->getNumChannels());
+
+            for (int ch = 0; ch < numChannels; ++ch)
+            {
+                bufferToFill.buffer->addFrom (ch,
+                                              bufferToFill.startSample,
+                                              crossfadeBuffer,
+                                              ch,
+                                              bufferToFill.startSample,
+                                              bufferToFill.numSamples);
+            }
+
+            shouldFadeOutFile = false;
+        }
+    }
     else if (filePlayer.readyToPlay())
+    {
         filePlayer.getNextAudioBlock (bufferToFill);
+        shouldFadeOutFile = true;
+
+        if (shouldFadeInFile)
+        {
+            AudioSourceChannelInfo crossfadeInfo (&crossfadeBuffer,
+                                                  bufferToFill.startSample,
+                                                  bufferToFill.numSamples);
+            syncPlayer.getNextAudioBlock (crossfadeInfo);
+
+            const int fadeLength = jmin (256, bufferToFill.numSamples);
+            bufferToFill.buffer->applyGainRamp (bufferToFill.startSample,
+                                                fadeLength,
+                                                0.0f, 1.0f);
+
+            const int numChannels = jmin (crossfadeBuffer.getNumChannels(),
+                                          bufferToFill.buffer->getNumChannels());
+
+            for (int ch = 0; ch < numChannels; ++ch)
+            {
+                bufferToFill.buffer->addFrom (ch,
+                                              bufferToFill.startSample,
+                                              crossfadeBuffer,
+                                              ch,
+                                              bufferToFill.startSample,
+                                              bufferToFill.numSamples);
+            }
+
+            shouldFadeInFile = false;
+        }
+    }
     else
-        bufferToFill.clearActiveBufferRegion();
+    {
+        if (shouldFadeInFile)
+        {
+            syncPlayer.getNextAudioBlock (bufferToFill);
+            shouldFadeInFile = false;
+        }
+        else
+        {
+            bufferToFill.clearActiveBufferRegion();
+        }
+    }
 }
 
 void MainComponent::releaseResources()
 {
-    // This will be called when the audio device stops, or when it is being
-    // restarted due to a setting change.
-
     syncPlayer.releaseResources();
     filePlayer.releaseResources();
 }

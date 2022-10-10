@@ -56,10 +56,15 @@ private:
     // Transport management
     AudioFilePlayer syncPlayer;
     AudioFilePlayer filePlayer;
-    AudioFormatManager formatManager;
+
+    AudioBuffer<float> crossfadeBuffer;
+
+    bool shouldFadeOutFile = false;
+    bool shouldFadeInFile = false;
 
     //==========================================================================
     // Audio Processing
+    AudioFormatManager formatManager;
     MultiDevicePlayer audioOutput;
 
     //==========================================================================

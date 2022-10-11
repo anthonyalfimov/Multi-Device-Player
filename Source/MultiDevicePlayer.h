@@ -48,8 +48,22 @@ private:
 
     //==========================================================================
     // Shared audio buffer facilities
-    AudioFifo fifoBuffer;
+    AudioFifo sharedBuffer;
     SpinLock popMutex;
+    SpinLock pushMutex;
+    SpinLock resizeMutex;
+
+    int mainDeviceBlockSize = 32;
+    int linkedDeviceBlockSize = 32;
+
+    /** [Non-realtime] [Non-thread-safe]
+        Checks whether sharedBuffer size needs to be changed and resizes it
+        if necessary.
+
+        @param numChannels  pass the new number of channels required,
+                            or -1 to keep the channel count unchanged.
+    */
+    void resizeSharedBuffer (int numChannels = -1);
 
     //==========================================================================
     // Objects for streaming audio from an audio source to managed devices

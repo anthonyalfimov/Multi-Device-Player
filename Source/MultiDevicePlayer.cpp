@@ -51,6 +51,21 @@ void MultiDevicePlayer::shutdownAudio()
 }
 
 //==============================================================================
+void MultiDevicePlayer::resizeSharedBuffer (int numChannels)
+{
+    const int bufferSize = 4 * jmax (mainDeviceBlockSize, linkedDeviceBlockSize);
+
+    if (numChannels < 0)
+        numChannels = sharedBuffer.getNumChannels();
+
+    if (sharedBuffer.getTotalSize() == bufferSize
+        && sharedBuffer.getNumChannels() == numChannels)
+        return;
+
+    sharedBuffer.setSize (numChannels, bufferSize);
+}
+
+//==============================================================================
 MultiDevicePlayer::MainAudioSource::MainAudioSource (MultiDevicePlayer& mdp)
     : owner (mdp)
 {
@@ -68,8 +83,13 @@ void MultiDevicePlayer::MainAudioSource::
     delay.setDelayBufferSize (numChannels, owner.maxLatency);
     delay.prepareToPlay (samplesPerBlockExpected, sampleRate);
 
-    SpinLock::ScopedLockType lock (owner.popMutex);
-    owner.fifoBuffer.setSize (numChannels, samplesPerBlockExpected * 4);
+    {
+        SpinLock::ScopedLockType popLock (owner.popMutex);
+        SpinLock::ScopedLockType resizeLock (owner.resizeMutex);
+
+        owner.mainDeviceBlockSize = samplesPerBlockExpected;
+        owner.resizeSharedBuffer (numChannels);
+    }
 }
 
 void MultiDevicePlayer::MainAudioSource::
@@ -81,7 +101,7 @@ void MultiDevicePlayer::MainAudioSource::
     else
         bufferToFill.clearActiveBufferRegion();
 
-    owner.fifoBuffer.push (bufferToFill);
+    owner.sharedBuffer.push (bufferToFill);
 
     // Delay audio for latency compensation
     const float latencyValue = owner.latency.load();
@@ -116,6 +136,14 @@ void MultiDevicePlayer::LinkedAudioSource::
         .getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
     delay.setDelayBufferSize (numChannels, owner.maxLatency);
     delay.prepareToPlay (samplesPerBlockExpected, sampleRate);
+
+    {
+        SpinLock::ScopedLockType pushLock (owner.pushMutex);
+        SpinLock::ScopedLockType resizeLock (owner.resizeMutex);
+
+        owner.linkedDeviceBlockSize = samplesPerBlockExpected;
+        owner.resizeSharedBuffer();
+    }
 }
 
 void MultiDevicePlayer::LinkedAudioSource::
@@ -126,7 +154,7 @@ void MultiDevicePlayer::LinkedAudioSource::
         SpinLock::ScopedTryLockType lock (owner.popMutex);
 
         if (lock.isLocked())
-            owner.fifoBuffer.pop (bufferToFill);
+            owner.sharedBuffer.pop (bufferToFill);
         else
             bufferToFill.clearActiveBufferRegion();
     }

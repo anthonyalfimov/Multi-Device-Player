@@ -19,19 +19,12 @@ int AudioFifo::getTotalSize() const
 //==========================================================================
 void AudioFifo::setSize (int newNumChannels, int newNumSamples)
 {
-    // TODO: Use a spin lock to resize the FIFO?
-    // Push and pop will require locking for the duration of the whole operation.
-    // Are there other way to resize the FIFO in a thread-safe manner when
-    // one of the devices is changed?
-
     buffer.setSize (newNumChannels, newNumSamples, false, true, false);
     fifoManager.setTotalSize (newNumSamples);
 }
 
 void AudioFifo::reset()
 {
-    // TODO: Use a spin lock to reset the FIFO?
-
     buffer.clear();
     fifoManager.reset();
 }

@@ -67,20 +67,38 @@ public:
 
         @returns    the number of samples pushed to the FIFO.
     */
-    int push (const AudioSourceChannelInfo& inBuffer);
+    int push (const AudioSourceChannelInfo& inInfo);
 
     /** [Realtime] [Thread-safe]
         Pop samples from the FIFO.
 
         @returns    the number of samples popped from the FIFO.
     */
-    int pop (const AudioSourceChannelInfo& outBuffer);
+    int pop (const AudioSourceChannelInfo& outInfo);
+
+    /** [Realtime] [Thread-safe]
+     Push samples to the FIFO and apply a gain ramp.
+
+     @returns    the number of samples pushed to the FIFO.
+     */
+    int pushWithRamp (const AudioSourceChannelInfo& inInfo,
+                      float startGain, float endGain);
+
+    /** [Realtime] [Thread-safe]
+     Pop samples from the FIFO and apply a gain ramp.
+
+     @returns    the number of samples popped from the FIFO.
+     */
+    int popWithRamp (const AudioSourceChannelInfo& outInfo,
+                     float startGain, float endGain);
 
 private:
     AbstractFifo fifoManager { defaultSize };
     AudioBuffer<float> buffer { 2, defaultSize };
 
     inline static constexpr int defaultSize = 512;
+
+    float getMidGain (float startGain, float endGain, int blockSize1, int blockSize2);
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioFifo)

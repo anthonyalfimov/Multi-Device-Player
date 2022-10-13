@@ -30,22 +30,38 @@ void AudioFifo::reset()
 }
 
 //==========================================================================
-int AudioFifo::push (const AudioSourceChannelInfo& inBuffer)
+int AudioFifo::push (const AudioSourceChannelInfo& inInfo)
 {
-    const auto status = fifoManager.write (inBuffer.numSamples);
+    return pushWithRamp (inInfo, 1.0f, 1.0f);
+}
 
+int AudioFifo::pop (const AudioSourceChannelInfo& outInfo)
+{
+    return popWithRamp (outInfo, 1.0f, 1.0f);
+}
+
+int AudioFifo::pushWithRamp (const AudioSourceChannelInfo& inInfo,
+                             float startGain, float endGain)
+{
+    const auto status = fifoManager.write (inInfo.numSamples);
+
+    const auto* inBuffer = inInfo.buffer;
     const auto channelsRequired = buffer.getNumChannels();
-    const auto channelsToProcess = jmin (inBuffer.buffer->getNumChannels(),
-                                         channelsRequired);
+    const auto channelsToProcess = jmin (inBuffer->getNumChannels(), channelsRequired);
+    
+    const float midGain = getMidGain (startGain, endGain,
+                                      status.blockSize1, status.blockSize2);
 
     if (status.blockSize1 > 0)
     {
+        const int inStartIndex1 = inInfo.startSample;
+
         for (int ch = 0; ch < channelsToProcess; ++ch)
         {
-            buffer.copyFrom (ch, status.startIndex1,
-                             *inBuffer.buffer,
-                             ch, inBuffer.startSample,
-                             status.blockSize1);
+            buffer.copyFromWithRamp (ch, status.startIndex1,
+                                     inBuffer->getReadPointer (ch, inStartIndex1),
+                                     status.blockSize1,
+                                     startGain, midGain);
         }
 
         // Clear any remaining channels:
@@ -57,12 +73,14 @@ int AudioFifo::push (const AudioSourceChannelInfo& inBuffer)
 
     if (status.blockSize2 > 0)
     {
+        const int inStartIndex2 = inInfo.startSample + status.blockSize1;
+
         for (int ch = 0; ch < channelsToProcess; ++ch)
         {
-            buffer.copyFrom (ch, status.startIndex2,
-                             *inBuffer.buffer,
-                             ch, inBuffer.startSample + status.blockSize1,
-                             status.blockSize2);
+            buffer.copyFromWithRamp (ch, status.startIndex2,
+                                     inBuffer->getReadPointer (ch, inStartIndex2),
+                                     status.blockSize2,
+                                     midGain, endGain);
         }
 
         // Clear any remaining channels:
@@ -75,48 +93,66 @@ int AudioFifo::push (const AudioSourceChannelInfo& inBuffer)
     return status.blockSize1 + status.blockSize2;
 }
 
-int AudioFifo::pop (const AudioSourceChannelInfo& outBuffer)
+int AudioFifo::popWithRamp (const AudioSourceChannelInfo& outInfo,
+                            float startGain, float endGain)
 {
-    const auto status = fifoManager.read (outBuffer.numSamples);
+    const auto status = fifoManager.read (outInfo.numSamples);
 
-    const auto channelsRequired = outBuffer.buffer->getNumChannels();
-    const auto channelsToProcess = jmin (buffer.getNumChannels(),
-                                         channelsRequired);
+    auto* outBuffer = outInfo.buffer;
+    const auto channelsRequired = outBuffer->getNumChannels();
+    const auto channelsToProcess = jmin (buffer.getNumChannels(), channelsRequired);
+
+    const float midGain = getMidGain (startGain, endGain,
+                                      status.blockSize1, status.blockSize2);
 
     if (status.blockSize1 > 0)
     {
+        const int outStartIndex1 = outInfo.startSample;
+
         for (int ch = 0; ch < channelsToProcess; ++ch)
         {
-            outBuffer.buffer->copyFrom (ch, outBuffer.startSample,
-                                        buffer,
-                                        ch, status.startIndex1,
-                                        status.blockSize1);
+            outBuffer->copyFromWithRamp (ch, outStartIndex1,
+                                         buffer.getReadPointer (ch, status.startIndex1),
+                                         status.blockSize1,
+                                         startGain, midGain);
         }
 
         // Clear any remaining channels:
         for (int ch = channelsToProcess; ch < channelsRequired; ++ch)
         {
-            outBuffer.buffer->clear (ch, outBuffer.startSample, status.blockSize1);
+            outBuffer->clear (ch, outStartIndex1, status.blockSize1);
         }
     }
 
     if (status.blockSize2 > 0)
     {
+        const int outStartIndex2 = outInfo.startSample + status.blockSize1;
+
         for (int ch = 0; ch < channelsToProcess; ++ch)
         {
-            outBuffer.buffer->copyFrom (ch, outBuffer.startSample + status.blockSize1,
-                                        buffer,
-                                        ch, status.startIndex2,
-                                        status.blockSize2);
+            outBuffer->copyFromWithRamp (ch, outStartIndex2,
+                                         buffer.getReadPointer (ch, status.startIndex2),
+                                         status.blockSize2,
+                                         midGain, endGain);
         }
 
         // Clear any remaining channels:
         for (int ch = channelsToProcess; ch < channelsRequired; ++ch)
         {
-            outBuffer.buffer->clear (ch, outBuffer.startSample + status.blockSize1,
-                                     status.blockSize2);
+            outBuffer->clear (ch, outStartIndex2, status.blockSize2);
         }
     }
 
     return status.blockSize1 + status.blockSize2;
+}
+
+float AudioFifo::getMidGain (float startGain, float endGain,
+                             int blockSize1, int blockSize2)
+{
+    if (startGain == endGain)
+        return startGain;
+
+    float midRatio = static_cast<float> (blockSize1) / (blockSize1 + blockSize2);
+
+    return jmap (midRatio, startGain, endGain);
 }

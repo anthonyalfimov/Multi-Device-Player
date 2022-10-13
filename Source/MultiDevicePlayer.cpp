@@ -13,7 +13,7 @@
 // TODO: Consider handling input audio
 
 MultiDevicePlayer::MultiDevicePlayer (double maxLatencyInMs)
-    : maxLatency (maxLatencyInMs), mainSource (*this), linkedSource (*this)
+    : mainSource (*this, maxLatencyInMs), linkedSource (*this, maxLatencyInMs)
 {
     //==========================================================================
     // Check that atomic float is lock-free
@@ -53,7 +53,8 @@ void MultiDevicePlayer::shutdownAudio()
 //==============================================================================
 void MultiDevicePlayer::resizeSharedBuffer (int numChannels)
 {
-    const int bufferSize = 4 * jmax (mainDeviceBlockSize, linkedDeviceBlockSize);
+    const int bufferSize = 4 * jmax (mainSource.getPushBlockSize(),
+                                     linkedSource.getPopBlockSize());
 
     if (numChannels < 0)
         numChannels = sharedBuffer.getNumChannels();
@@ -66,13 +67,14 @@ void MultiDevicePlayer::resizeSharedBuffer (int numChannels)
 }
 
 //==============================================================================
-MultiDevicePlayer::MainAudioSource::MainAudioSource (MultiDevicePlayer& mdp)
-    : owner (mdp)
+MultiDevicePlayer::PushAudioSource::
+    PushAudioSource (MultiDevicePlayer& mdp, double maxLatencyInMs)
+        : owner (mdp), maxLatency (maxLatencyInMs)
 {
     
 }
 
-void MultiDevicePlayer::MainAudioSource::
+void MultiDevicePlayer::PushAudioSource::
         prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
     if (source != nullptr)
@@ -80,19 +82,24 @@ void MultiDevicePlayer::MainAudioSource::
 
     const int numChannels = owner.mainDeviceManager
         .getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
-    delay.setDelayBufferSize (numChannels, owner.maxLatency);
+    delay.setDelayBufferSize (numChannels, maxLatency);
     delay.prepareToPlay (samplesPerBlockExpected, sampleRate);
 
     {
         SpinLock::ScopedLockType popLock (owner.popMutex);
         SpinLock::ScopedLockType resizeLock (owner.resizeMutex);
 
-        owner.mainDeviceBlockSize = samplesPerBlockExpected;
+        blockSize = samplesPerBlockExpected;
+        nominalSampleRate = sampleRate;
+
+        // NB! Always update the resampling ratio before resizing the shared
+        //     buffer because pop block size depends on the ratio.
+        owner.linkedSource.updateResamplingRatio();
         owner.resizeSharedBuffer (numChannels);
     }
 }
 
-void MultiDevicePlayer::MainAudioSource::
+void MultiDevicePlayer::PushAudioSource::
         getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
     // Process audio and push it to the shared buffer
@@ -114,7 +121,7 @@ void MultiDevicePlayer::MainAudioSource::
     delay.getNextAudioBlock (bufferToFill);
 }
 
-void MultiDevicePlayer::MainAudioSource::releaseResources()
+void MultiDevicePlayer::PushAudioSource::releaseResources()
 {
     if (source != nullptr)
         source->releaseResources();
@@ -123,38 +130,56 @@ void MultiDevicePlayer::MainAudioSource::releaseResources()
 }
 
 //==============================================================================
-MultiDevicePlayer::LinkedAudioSource::LinkedAudioSource (MultiDevicePlayer& mdp)
-    : owner (mdp)
+MultiDevicePlayer::PopAudioSource::
+    PopAudioSource (MultiDevicePlayer& mdp, double maxLatencyInMs)
+        : owner (mdp), maxLatency (maxLatencyInMs)
 {
 
 }
 
-void MultiDevicePlayer::LinkedAudioSource::
+void MultiDevicePlayer::PopAudioSource::
         prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
     const int numChannels = owner.linkedDeviceManager
         .getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
-    delay.setDelayBufferSize (numChannels, owner.maxLatency);
+    delay.setDelayBufferSize (numChannels, maxLatency);
     delay.prepareToPlay (samplesPerBlockExpected, sampleRate);
 
     {
         SpinLock::ScopedLockType pushLock (owner.pushMutex);
         SpinLock::ScopedLockType resizeLock (owner.resizeMutex);
 
-        owner.linkedDeviceBlockSize = samplesPerBlockExpected;
+        nominalSampleRate = sampleRate;
+        blockSize = samplesPerBlockExpected;
+
+        resampler = std::make_unique<ResamplingAudioSource> (&sharedBufferShource,
+                                                             false,
+                                                             numChannels);
+
+        // NB! Always update the resampling ratio before resizing the shared
+        //     buffer because pop block size depends on the ratio.
+        initialiseResampling();
         owner.resizeSharedBuffer();
     }
 }
 
-void MultiDevicePlayer::LinkedAudioSource::
+void MultiDevicePlayer::PopAudioSource::
         getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
     // Pop audio from the shared buffer
     {
         SpinLock::ScopedTryLockType lock (owner.popMutex);
 
+        // TODO: Should we lock inside or outside the AudioSource for the Resampler?
+        // If it's outside, we keep all the handling of not getting a lock here,
+        // otherwise, we need to put it into the AudioSource object.
+        // On the other hand, if we lock here, we lock for the full duration of the
+        // ResamplingAudioSource operation.
+        // What about underflow and overflow handling? Is there a preference from
+        // those?
+
         if (lock.isLocked())
-            owner.sharedBuffer.pop (bufferToFill);
+            resampler->getNextAudioBlock (bufferToFill);
         else
             bufferToFill.clearActiveBufferRegion();
     }
@@ -170,8 +195,38 @@ void MultiDevicePlayer::LinkedAudioSource::
     delay.getNextAudioBlock (bufferToFill);
 }
 
-void MultiDevicePlayer::LinkedAudioSource::releaseResources()
+void MultiDevicePlayer::PopAudioSource::releaseResources()
 {
     delay.releaseResources();
+
+    {
+        SpinLock::ScopedLockType resizeLock (owner.resizeMutex);
+        resampler->releaseResources();
+        resampler.reset();
+    }
 }
 
+void MultiDevicePlayer::PopAudioSource::updateResamplingRatio()
+{
+    if (resampler == nullptr)
+        return;
+
+    resampler->releaseResources();
+    initialiseResampling();
+}
+
+void MultiDevicePlayer::PopAudioSource::initialiseResampling()
+{
+    double resamplingRatio = owner.mainSource.getSampleRate() / nominalSampleRate;
+
+    // TODO: Should we use more accurate conversion or pad the buffer size?
+    popBlockSize = roundToInt (blockSize * resamplingRatio);
+
+    // TODO: ResamplingAudioSource can reallocate during processing
+    // 1. Set resamplingRatio that would allocate buffer with excess
+    // 2. Call prepareToPlay to trigger buffer allocation
+    // 3. Set resamplingRatio to the actual value
+    
+    resampler->setResamplingRatio (resamplingRatio);
+    resampler->prepareToPlay (blockSize, nominalSampleRate);
+}

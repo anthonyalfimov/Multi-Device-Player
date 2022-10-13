@@ -44,7 +44,6 @@ public:
 private:
     // Latency compensation
     std::atomic<float> latency { 0.0f };    // [ms]
-    const double maxLatency;
 
     //==========================================================================
     // Shared audio buffer facilities
@@ -52,9 +51,6 @@ private:
     SpinLock popMutex;
     SpinLock pushMutex;
     SpinLock resizeMutex;
-
-    int mainDeviceBlockSize = 32;
-    int linkedDeviceBlockSize = 32;
 
     /** [Non-realtime] [Non-thread-safe]
         Checks whether sharedBuffer size needs to be changed and resizes it
@@ -72,10 +68,10 @@ private:
 
     //==========================================================================
     // Audio sources for managed devices
-    class MainAudioSource  : public AudioSource
+    class PushAudioSource  : public AudioSource
     {
     public:
-        MainAudioSource (MultiDevicePlayer& mdp);
+        PushAudioSource (MultiDevicePlayer& mdp, double maxLatencyInMs);
 
         //======================================================================
         void setSource (AudioSource* src) { source = src; }
@@ -85,39 +81,87 @@ private:
         void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override;
         void releaseResources() override;
 
+        //======================================================================
+        double getSampleRate() const { return nominalSampleRate; }
+        int getPushBlockSize() const { return blockSize; }
+
     private:
         MultiDevicePlayer& owner;
         DelayAudioSource delay;
+        const double maxLatency;
         AudioSource* source = nullptr;
 
+        double nominalSampleRate = 44100.0;
+        int blockSize = 32;
+
         //======================================================================
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainAudioSource)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PushAudioSource)
     };
 
-    class LinkedAudioSource  : public AudioSource
+    class AudioFifoSource  : public AudioSource
     {
     public:
-        explicit LinkedAudioSource (MultiDevicePlayer& mdp);
+        explicit AudioFifoSource (AudioFifo& af) : fifo (af) {}
+
+        //======================================================================
+        void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override {}
+        void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
+        {
+            static double count = 0.0;
+            if (fifo.getNumReady() < bufferToFill.numSamples)
+                DBG ("Pop skipped #" << (++count));
+            fifo.pop (bufferToFill);
+        }
+        void releaseResources() override {}
+
+    private:
+        AudioFifo& fifo;
+    };
+
+    class PopAudioSource  : public AudioSource
+    {
+    public:
+        PopAudioSource (MultiDevicePlayer& mdp, double maxLatencyInMs);
 
         //======================================================================
         void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
         void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override;
         void releaseResources() override;
 
+        //======================================================================
+        double getSampleRate() const { return nominalSampleRate; }
+        int getPopBlockSize() const { return popBlockSize; }
+
+        //======================================================================
+        /** [Non-realtime] [Non-tread-safe]
+            Recalculate and set the resampling ratio.
+        */
+        void updateResamplingRatio();
+
     private:
         MultiDevicePlayer& owner;
         DelayAudioSource delay;
+        const double maxLatency;
+
+        double nominalSampleRate = 44100.0;
+        int blockSize = 32;
+        int popBlockSize = 32;
+
+        AudioFifoSource sharedBufferShource { owner.sharedBuffer };
+        std::unique_ptr<ResamplingAudioSource> resampler;
+
+        void initialiseResampling();
 
         //======================================================================
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LinkedAudioSource)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PopAudioSource)
     };
 
-    friend class MainAudioSource;
-    friend class LinkedAudioSource;
+    friend class PushAudioSource;
+    friend class PopAudioSource;
 
     //==========================================================================
-    MainAudioSource mainSource;
-    LinkedAudioSource linkedSource;
+    PushAudioSource mainSource;
+    PopAudioSource linkedSource;
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MultiDevicePlayer)

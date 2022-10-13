@@ -34,29 +34,41 @@ int AudioFifo::push (const AudioSourceChannelInfo& inBuffer)
 {
     const auto status = fifoManager.write (inBuffer.numSamples);
 
-    // TODO: handle mismatched number of channels
-    const auto numChannels = buffer.getNumChannels();
-    jassert (numChannels == inBuffer.buffer->getNumChannels());
+    const auto channelsRequired = buffer.getNumChannels();
+    const auto channelsToProcess = jmin (inBuffer.buffer->getNumChannels(),
+                                         channelsRequired);
 
     if (status.blockSize1 > 0)
     {
-        for (int i = 0; i < numChannels; ++i)
+        for (int ch = 0; ch < channelsToProcess; ++ch)
         {
-            buffer.copyFrom (i, status.startIndex1,
+            buffer.copyFrom (ch, status.startIndex1,
                              *inBuffer.buffer,
-                             i, inBuffer.startSample,
+                             ch, inBuffer.startSample,
                              status.blockSize1);
+        }
+
+        // Clear any remaining channels:
+        for (int ch = channelsToProcess; ch < channelsRequired; ++ch)
+        {
+            buffer.clear (ch, status.startIndex1, status.blockSize1);
         }
     }
 
     if (status.blockSize2 > 0)
     {
-        for (int i = 0; i < numChannels; ++i)
+        for (int ch = 0; ch < channelsToProcess; ++ch)
         {
-            buffer.copyFrom (i, status.startIndex2,
+            buffer.copyFrom (ch, status.startIndex2,
                              *inBuffer.buffer,
-                             i, inBuffer.startSample + status.blockSize1,
+                             ch, inBuffer.startSample + status.blockSize1,
                              status.blockSize2);
+        }
+
+        // Clear any remaining channels:
+        for (int ch = channelsToProcess; ch < channelsRequired; ++ch)
+        {
+            buffer.clear (ch, status.startIndex2, status.blockSize2);
         }
     }
 
@@ -67,29 +79,42 @@ int AudioFifo::pop (const AudioSourceChannelInfo& outBuffer)
 {
     const auto status = fifoManager.read (outBuffer.numSamples);
 
-    // TODO: handle mismatched number of channels
-    const auto numChannels = buffer.getNumChannels();
-    jassert (numChannels == outBuffer.buffer->getNumChannels());
+    const auto channelsRequired = outBuffer.buffer->getNumChannels();
+    const auto channelsToProcess = jmin (buffer.getNumChannels(),
+                                         channelsRequired);
 
     if (status.blockSize1 > 0)
     {
-        for (int i = 0; i < numChannels; ++i)
+        for (int ch = 0; ch < channelsToProcess; ++ch)
         {
-            outBuffer.buffer->copyFrom (i, outBuffer.startSample,
+            outBuffer.buffer->copyFrom (ch, outBuffer.startSample,
                                         buffer,
-                                        i, status.startIndex1,
+                                        ch, status.startIndex1,
                                         status.blockSize1);
+        }
+
+        // Clear any remaining channels:
+        for (int ch = channelsToProcess; ch < channelsRequired; ++ch)
+        {
+            outBuffer.buffer->clear (ch, outBuffer.startSample, status.blockSize1);
         }
     }
 
     if (status.blockSize2 > 0)
     {
-        for (int i = 0; i < numChannels; ++i)
+        for (int ch = 0; ch < channelsToProcess; ++ch)
         {
-            outBuffer.buffer->copyFrom (i, outBuffer.startSample + status.blockSize1,
+            outBuffer.buffer->copyFrom (ch, outBuffer.startSample + status.blockSize1,
                                         buffer,
-                                        i, status.startIndex2,
+                                        ch, status.startIndex2,
                                         status.blockSize2);
+        }
+
+        // Clear any remaining channels:
+        for (int ch = channelsToProcess; ch < channelsRequired; ++ch)
+        {
+            outBuffer.buffer->clear (ch, outBuffer.startSample + status.blockSize1,
+                                     status.blockSize2);
         }
     }
 

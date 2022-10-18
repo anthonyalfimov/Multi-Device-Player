@@ -53,7 +53,7 @@ void MultiDevicePlayer::shutdownAudio()
 //==============================================================================
 void MultiDevicePlayer::resizeSharedBuffer (int numChannels)
 {
-    const int bufferSize = 4 * jmax (mainSource.getPushBlockSize(),
+    const int bufferSize = 6 * jmax (mainSource.getPushBlockSize(),
                                      linkedSource.getPopBlockSize());
 
     if (numChannels < 0)
@@ -108,7 +108,41 @@ void MultiDevicePlayer::PushAudioSource::
     else
         bufferToFill.clearActiveBufferRegion();
 
-    owner.sharedBuffer.push (bufferToFill);
+    // Push audio to the shared buffer
+    {
+        SpinLock::ScopedTryLockType pushLock (owner.pushMutex);
+
+        if (pushLock.isLocked())
+        {
+            const int freeSpace = owner.sharedBuffer.getFreeSpace();
+            const int sharedBufferSize = owner.sharedBuffer.getTotalSize();
+            const int minFreeSpace = static_cast<int> (1.2f * blockSize);
+
+            if (waitForBufferSpace)
+            {
+                if (freeSpace >= sharedBufferSize / 2)
+                {
+                    // Push and fade in
+                    owner.sharedBuffer.pushWithRamp (bufferToFill, 0.0f, 1.0f);
+                    waitForBufferSpace = false;
+                }
+            }
+            else
+            {
+                if (freeSpace >= minFreeSpace)
+                {
+                    // Push
+                    owner.sharedBuffer.push (bufferToFill);
+                }
+                else
+                {
+                    // Push and fade out
+                    owner.sharedBuffer.pushWithRamp (bufferToFill, 1.0f, 0.0f);
+                    waitForBufferSpace = true;
+                }
+            }
+        }
+    }
 
     // Delay audio for latency compensation
     const float latencyValue = owner.latency.load();
@@ -152,7 +186,7 @@ void MultiDevicePlayer::PopAudioSource::
         nominalSampleRate = sampleRate;
         blockSize = samplesPerBlockExpected;
 
-        resampler = std::make_unique<ResamplingAudioSource> (&sharedBufferShource,
+        resampler = std::make_unique<ResamplingAudioSource> (&sharedBufferSource,
                                                              false,
                                                              numChannels);
 
@@ -168,20 +202,51 @@ void MultiDevicePlayer::PopAudioSource::
 {
     // Pop audio from the shared buffer
     {
-        SpinLock::ScopedTryLockType lock (owner.popMutex);
+        SpinLock::ScopedTryLockType popLock (owner.popMutex);
 
-        // TODO: Should we lock inside or outside the AudioSource for the Resampler?
-        // If it's outside, we keep all the handling of not getting a lock here,
-        // otherwise, we need to put it into the AudioSource object.
-        // On the other hand, if we lock here, we lock for the full duration of the
-        // ResamplingAudioSource operation.
-        // What about underflow and overflow handling? Is there a preference from
-        // those?
+        if (popLock.isLocked())
+        {
+            const int numReady = owner.sharedBuffer.getNumReady();
+            const int sharedBufferSize = owner.sharedBuffer.getTotalSize();
+            const int minNumReady = static_cast<int> (1.2f * popBlockSize);
 
-        if (lock.isLocked())
-            resampler->getNextAudioBlock (bufferToFill);
+            if (waitForBufferToFill)
+            {
+                if (numReady >= sharedBufferSize / 2)
+                {
+                    // Pop and fade in
+                    sharedBufferSource.setGainRamp (0.0f, 1.0f);
+                    resampler->getNextAudioBlock (bufferToFill);
+                    waitForBufferToFill = false;
+                }
+                else
+                {
+                    // Clear buffer
+                    bufferToFill.clearActiveBufferRegion();
+                }
+            }
+            else
+            {
+                if (numReady >= minNumReady)
+                {
+                    // Pop
+                    sharedBufferSource.setGainRamp (1.0f, 1.0f);
+                    resampler->getNextAudioBlock (bufferToFill);
+                }
+                else
+                {
+                    // Pop and fade out
+                    sharedBufferSource.setGainRamp (1.0f, 0.0f);
+                    resampler->getNextAudioBlock (bufferToFill);
+                    waitForBufferToFill = true;
+                }
+            }
+        }
         else
+        {
+            // Clear buffer
             bufferToFill.clearActiveBufferRegion();
+        }
     }
 
     // Delay audio for latency compensation
@@ -201,8 +266,12 @@ void MultiDevicePlayer::PopAudioSource::releaseResources()
 
     {
         SpinLock::ScopedLockType resizeLock (owner.resizeMutex);
-        resampler->releaseResources();
-        resampler.reset();
+
+        if (resampler != nullptr)
+        {
+            resampler->releaseResources();
+            resampler.reset();
+        }
     }
 }
 
@@ -219,8 +288,8 @@ void MultiDevicePlayer::PopAudioSource::initialiseResampling()
 {
     double resamplingRatio = owner.mainSource.getSampleRate() / nominalSampleRate;
 
-    // TODO: Should we use more accurate conversion or pad the buffer size?
-    popBlockSize = roundToInt (blockSize * resamplingRatio);
+    // Max block size that can be requested by ResamplingAudioSource:
+    popBlockSize = roundToInt (blockSize * resamplingRatio) + 3;
 
     // TODO: ResamplingAudioSource can reallocate during processing
     // 1. Set resamplingRatio that would allocate buffer with excess

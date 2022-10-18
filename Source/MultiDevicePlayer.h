@@ -12,6 +12,7 @@
 
 #include <JuceHeader.h>
 #include "AudioFifo.h"
+#include "AudioFifoSource.h"
 #include "DelayAudioSource.h"
 
 class MultiDevicePlayer
@@ -91,31 +92,13 @@ private:
         const double maxLatency;
         AudioSource* source = nullptr;
 
+        bool waitForBufferSpace = false;
+
         double nominalSampleRate = 44100.0;
         int blockSize = 32;
 
         //======================================================================
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PushAudioSource)
-    };
-
-    class AudioFifoSource  : public AudioSource
-    {
-    public:
-        explicit AudioFifoSource (AudioFifo& af) : fifo (af) {}
-
-        //======================================================================
-        void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override {}
-        void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
-        {
-            static double count = 0.0;
-            if (fifo.getNumReady() < bufferToFill.numSamples)
-                DBG ("Pop skipped #" << (++count));
-            fifo.pop (bufferToFill);
-        }
-        void releaseResources() override {}
-
-    private:
-        AudioFifo& fifo;
     };
 
     class PopAudioSource  : public AudioSource
@@ -143,11 +126,13 @@ private:
         DelayAudioSource delay;
         const double maxLatency;
 
+        bool waitForBufferToFill = true;
+
         double nominalSampleRate = 44100.0;
         int blockSize = 32;
         int popBlockSize = 32;
 
-        AudioFifoSource sharedBufferShource { owner.sharedBuffer };
+        AudioFifoSource sharedBufferSource { owner.sharedBuffer };
         std::unique_ptr<ResamplingAudioSource> resampler;
 
         void initialiseResampling();

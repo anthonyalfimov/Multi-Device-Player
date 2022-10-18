@@ -35,6 +35,8 @@
     <GROUP id="{AE89E423-7361-F9C4-74EB-F0560CB8CC83}" name="Processors">
       <FILE id="dUrKNc" name="AudioFifo.cpp" compile="1" resource="0" file="Source/AudioFifo.cpp"/>
       <FILE id="TO5PjF" name="AudioFifo.h" compile="0" resource="0" file="Source/AudioFifo.h"/>
+      <FILE id="dkSbDO" name="AudioFifoSource.h" compile="0" resource="0"
+            file="Source/AudioFifoSource.h"/>
       <FILE id="cYJGSm" name="AudioFilePlayer.cpp" compile="1" resource="0"
             file="Source/AudioFilePlayer.cpp"/>
       <FILE id="PM7wnT" name="AudioFilePlayer.h" compile="0" resource="0"

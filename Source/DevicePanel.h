@@ -12,17 +12,23 @@
 
 #include <JuceHeader.h>
 #include "InterfacePanel.h"
+#include "LatencyPanel.h"
 
 //==============================================================================
 class DevicePanel  : public InterfacePanel,
                      public ComponentListener
 {
 public:
-    DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked);
+    DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked,
+                 AudioFilePlayer& syncPlayer, double maxLatencyInMs);
 
     //==========================================================================
     void paint (Graphics& g) override;
     void resized() override;
+
+    //==========================================================================
+    // Parameter attachment
+    void attachLatencyParameter (std::atomic<float>* latency);
 
     //==========================================================================
     void setDeviceSelectorEnabled (bool shouldBeEnabled);
@@ -32,7 +38,7 @@ public:
     void componentMovedOrResized (Component&, bool wasMoved, bool wasResized) override;
 
 private:
-    Label outputPanelLabel;
+    Label devicePanelLabel;
 
     //==========================================================================
     // Audio ouput devices
@@ -41,6 +47,10 @@ private:
 
     AudioDeviceManager& linkedDeviceManager;
     AudioDeviceSelectorComponent linkedSelectorPanel;
+
+    //==========================================================================
+    // Latency compensation panel
+    LatencyPanel latencyPanel;
 
     //==========================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DevicePanel)

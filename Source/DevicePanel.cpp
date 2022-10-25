@@ -11,26 +11,32 @@
 #include "DevicePanel.h"
 
 //==============================================================================
-DevicePanel::DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked)
+DevicePanel::DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked,
+                          AudioFilePlayer& syncPlayer, double maxLatencyInMs)
     : mainDeviceManager (main),
       mainSelectorPanel (mainDeviceManager, 0, 0, 2, 2, false, false, true, false),
       linkedDeviceManager (linked),
-      linkedSelectorPanel (linkedDeviceManager, 0, 0, 2, 2, false, false, true, false)
+      linkedSelectorPanel (linkedDeviceManager, 0, 0, 2, 2, false, false, true, false),
+      latencyPanel (syncPlayer, maxLatencyInMs)
 {
     //==========================================================================
     // Audio device section
-    addAndMakeVisible (outputPanelLabel);
-    outputPanelLabel.setFont (headingFont);
+    addAndMakeVisible (devicePanelLabel);
+    devicePanelLabel.setFont (headingFont);
     const auto headingColour
     = getLookAndFeel().findColour (AppLookAndFeel::headingColourId);
-    outputPanelLabel.setColour (Label::textColourId, headingColour);
-    outputPanelLabel.setText("Audio Output Configuration", dontSendNotification);
+    devicePanelLabel.setColour (Label::textColourId, headingColour);
+    devicePanelLabel.setText("Audio Output Configuration", dontSendNotification);
 
     addAndMakeVisible (mainSelectorPanel);
     mainSelectorPanel.addComponentListener (this);
 
     addAndMakeVisible (linkedSelectorPanel);
     linkedSelectorPanel.addComponentListener (this);
+
+    //==========================================================================
+    // Latency compensation section
+    addAndMakeVisible (latencyPanel);
 }
 
 //==============================================================================
@@ -50,7 +56,8 @@ void DevicePanel::resized()
     //==========================================================================
     // Manage panel hight
     int requiredHeight = mainSelectorPanel.getHeight() + linkedSelectorPanel.getHeight()
-                       + (buttonHeight + padding) + 3 * padding;
+                       + latencyPanel.getHeight() + (buttonHeight + padding)
+                       + 3 * padding;
     setSize (getWidth(), requiredHeight);
 
     // Get usable bounds
@@ -58,14 +65,25 @@ void DevicePanel::resized()
 
     //==========================================================================
     // Audio device section
-    outputPanelLabel.setBounds (bounds.removeFromTop (buttonHeight + padding)
+    devicePanelLabel.setBounds (bounds.removeFromTop (buttonHeight + padding)
                                       .withTrimmedTop (padding)
                                       .withTrimmedLeft (padding));
 
     bounds.removeFromTop (padding);   // add spacing
 
     mainSelectorPanel.setBounds (bounds.removeFromTop (mainSelectorPanel.getHeight()));
-    linkedSelectorPanel.setBounds (bounds.removeFromTop (linkedSelectorPanel.getHeight()));
+    linkedSelectorPanel.setBounds (bounds.removeFromTop (linkedSelectorPanel
+                                                         .getHeight()));
+
+    //==========================================================================
+    // Latency compensation section
+    latencyPanel.setBounds (bounds.removeFromTop (latencyPanel.getHeight()));
+}
+
+//==============================================================================
+void DevicePanel::attachLatencyParameter (std::atomic<float>* latency)
+{
+    latencyPanel.attachLatencyParameter (latency);
 }
 
 //==============================================================================

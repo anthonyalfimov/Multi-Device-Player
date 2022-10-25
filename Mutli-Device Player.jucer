@@ -26,9 +26,6 @@
       <FILE id="fcsuBN" name="LatencyPanel.cpp" compile="1" resource="0"
             file="Source/LatencyPanel.cpp"/>
       <FILE id="deMvcS" name="LatencyPanel.h" compile="0" resource="0" file="Source/LatencyPanel.h"/>
-      <FILE id="BJ5D5T" name="ControlPanel.cpp" compile="1" resource="0"
-            file="Source/ControlPanel.cpp"/>
-      <FILE id="S1cL4K" name="ControlPanel.h" compile="0" resource="0" file="Source/ControlPanel.h"/>
       <FILE id="QIvfH9" name="DevicePanel.cpp" compile="1" resource="0" file="Source/DevicePanel.cpp"/>
       <FILE id="tkAwkr" name="DevicePanel.h" compile="0" resource="0" file="Source/DevicePanel.h"/>
     </GROUP>

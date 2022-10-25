@@ -36,29 +36,24 @@ MainComponent::MainComponent() : audioOutput (maxLatencyInMs)
     audioOutput.initialiseAudio (this, 2);
 
     //==========================================================================
+    // Set up file player
+    filePlayerPanel = std::make_unique<FilePlayerPanel> (filePlayer, formatManager);
+    addAndMakeVisible (filePlayerPanel.get());
+
+    //==========================================================================
     // Set up device panel
     devicePanel = std::make_unique<DevicePanel> (audioOutput.mainDeviceManager,
-                                                 audioOutput.linkedDeviceManager);
-
+                                                 audioOutput.linkedDeviceManager,
+                                                 syncPlayer, maxLatencyInMs);
+    devicePanel->attachLatencyParameter (audioOutput.getLatencyParameter());
     addAndMakeVisible (devicePanelViewport);
     devicePanelViewport.setViewedComponent (devicePanel.get(), false);
     devicePanelViewport.setScrollBarsShown (true, false);
 
     //==========================================================================
-    // Set up control panel
-    controlPanel = std::make_unique<ControlPanel> (syncPlayer, filePlayer,
-                                                   formatManager, maxLatencyInMs);
-    controlPanel->attachLatencyParameter (audioOutput.getLatencyParameter());
-
-    addAndMakeVisible (controlPanelViewport);
-    controlPanelViewport.setViewedComponent (controlPanel.get(), false);
-    controlPanelViewport.setScrollBarsShown (true, false);
-
-    //==========================================================================
     // Set initial component size
-    setSize (1200, 400);
+    setSize (600, 600);
     devicePanel->resized();
-    controlPanel->resized();
     resized();
 
     //==========================================================================
@@ -158,21 +153,16 @@ void MainComponent::resized()
     auto bounds = getLocalBounds().reduced (padding / 2);
 
     //==========================================================================
-    // Device Panel:
-    auto devicePanelBounds = bounds.removeFromLeft (600);
-    devicePanelViewport.setBounds (devicePanelBounds);
-    devicePanel->setSize (devicePanelBounds.getWidth(), devicePanel->getHeight());
-
-    if (devicePanelViewport.getViewHeight() < devicePanel->getHeight())
-        devicePanelViewport.setBounds (devicePanelBounds.withTrimmedRight (-3));
+    // File Player Panel:
+    filePlayerPanel->setBounds (bounds.removeFromTop (filePlayerPanel->getHeight()));
 
     //==========================================================================
-    // Control Panel:
-    controlPanelViewport.setBounds (bounds);
-    controlPanel->setSize (bounds.getWidth(), controlPanel->getHeight());
+    // Device Panel:
+    devicePanelViewport.setBounds (bounds);
+    devicePanel->setSize (bounds.getWidth(), devicePanel->getHeight());
 
-    if (controlPanelViewport.getViewHeight() < controlPanel->getHeight())
-        controlPanelViewport.setBounds (bounds.withTrimmedRight (-3));
+    if (devicePanelViewport.getViewHeight() < devicePanel->getHeight())
+        devicePanelViewport.setBounds (bounds.withTrimmedRight (-3));
 }
 
 //==============================================================================

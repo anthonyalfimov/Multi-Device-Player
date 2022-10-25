@@ -21,6 +21,7 @@ public:
     explicit LatencyPanel (AudioFilePlayer& player, double maxLatencyInMs);
 
     //==========================================================================
+    void paint (Graphics& g) override {}
     void resized() override;
 
     //==========================================================================

@@ -63,11 +63,11 @@ LatencyPanel::LatencyPanel (AudioFilePlayer& player, double maxLatencyInMs)
 void LatencyPanel::resized()
 {
     // Manage panel hight
-    int requiredHeight = 3 * (buttonHeight + padding) + 2 * padding;
+    int requiredHeight = 3 * (buttonHeight + padding) + padding;
     setSize (getWidth(), requiredHeight);
 
     // Set control bounds
-    auto bounds = getLocalBounds().reduced (padding / 2);
+    auto bounds = getLocalBounds();
 
     latencyPanelLabel.setBounds (bounds.removeFromTop (buttonHeight + padding)
                                        .withTrimmedTop (padding)

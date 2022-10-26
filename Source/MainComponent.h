@@ -25,6 +25,7 @@
 #include <JuceHeader.h>
 #include "AudioFilePlayer.h"
 #include "MultiDevicePlayer.h"
+#include "InterfacePanel.h"
 #include "FilePlayerPanel.h"
 #include "DevicePanel.h"
 #include "AppLookAndFeel.h"
@@ -78,8 +79,6 @@ private:
     //==========================================================================
     // UI Panels
     std::unique_ptr<FilePlayerPanel> filePlayerPanel;
-
-    Viewport devicePanelViewport;
     std::unique_ptr<DevicePanel> devicePanel;
 
     //==========================================================================

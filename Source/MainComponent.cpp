@@ -46,14 +46,11 @@ MainComponent::MainComponent() : audioOutput (maxLatencyInMs)
                                                  audioOutput.linkedDeviceManager,
                                                  syncPlayer, maxLatencyInMs);
     devicePanel->attachLatencyParameter (audioOutput.getLatencyParameter());
-    addAndMakeVisible (devicePanelViewport);
-    devicePanelViewport.setViewedComponent (devicePanel.get(), false);
-    devicePanelViewport.setScrollBarsShown (true, false);
+    addAndMakeVisible (devicePanel.get());
 
     //==========================================================================
     // Set initial component size
     setSize (600, 600);
-    devicePanel->resized();
     resized();
 
     //==========================================================================
@@ -143,26 +140,40 @@ void MainComponent::releaseResources()
 //==============================================================================
 void MainComponent::paint (Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
+    // Fill background
+    const auto bgColour = getLookAndFeel()
+                                .findColour (ResizableWindow::backgroundColourId);
+    g.fillAll (bgColour);
+
+    // Paint File Player Panel background
+    g.setColour (bgColour.darker (0.2f));
+    const auto filePlayerPanelBounds = filePlayerPanel->getBounds().toFloat();
+    g.drawRoundedRectangle (filePlayerPanelBounds,
+                            InterfacePanel::corner,
+                            InterfacePanel::line);
+
+    // Paint Device Panel background
+    g.setColour (bgColour.darker (0.2f));
+    const auto devicePanelBounds = devicePanel->getBounds().toFloat();
+    g.fillRoundedRectangle (devicePanelBounds,
+                            InterfacePanel::corner);
+    g.drawRoundedRectangle (devicePanelBounds,
+                            InterfacePanel::corner,
+                            InterfacePanel::line);
 }
 
 void MainComponent::resized()
 {
-    const auto padding = InterfacePanel::padding;
-    auto bounds = getLocalBounds().reduced (padding / 2);
+    auto bounds = getLocalBounds().reduced (InterfacePanel::padding);
 
     //==========================================================================
     // File Player Panel:
     filePlayerPanel->setBounds (bounds.removeFromTop (filePlayerPanel->getHeight()));
+    bounds.removeFromTop (InterfacePanel::padding);     // add spacing
 
     //==========================================================================
     // Device Panel:
-    devicePanelViewport.setBounds (bounds);
-    devicePanel->setSize (bounds.getWidth(), devicePanel->getHeight());
-
-    if (devicePanelViewport.getViewHeight() < devicePanel->getHeight())
-        devicePanelViewport.setBounds (bounds.withTrimmedRight (-3));
+    devicePanel->setBounds (bounds);
 }
 
 //==============================================================================

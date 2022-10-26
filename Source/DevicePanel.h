@@ -15,15 +15,14 @@
 #include "LatencyPanel.h"
 
 //==============================================================================
-class DevicePanel  : public InterfacePanel,
-                     public ComponentListener
+class DeviceSettingsView  : public InterfacePanel,
+                            public ComponentListener
 {
 public:
-    DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked,
-                 AudioFilePlayer& syncPlayer, double maxLatencyInMs);
+    DeviceSettingsView (AudioDeviceManager& main, AudioDeviceManager& linked,
+                        AudioFilePlayer& syncPlayer, double maxLatencyInMs);
 
     //==========================================================================
-    void paint (Graphics& g) override;
     void resized() override;
 
     //==========================================================================
@@ -42,9 +41,11 @@ private:
 
     //==========================================================================
     // Audio ouput devices
+    Label mainDeviceLabel;
     AudioDeviceManager& mainDeviceManager;
     AudioDeviceSelectorComponent mainSelectorPanel;
 
+    Label linkedDeviceLabel;
     AudioDeviceManager& linkedDeviceManager;
     AudioDeviceSelectorComponent linkedSelectorPanel;
 
@@ -53,5 +54,28 @@ private:
     LatencyPanel latencyPanel;
 
     //==========================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DevicePanel)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DeviceSettingsView)
+};
+
+//==============================================================================
+class DevicePanel  : public Component
+{
+public:
+    DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked,
+                 AudioFilePlayer& syncPlayer, double maxLatencyInMs);
+
+    //==========================================================================
+    void resized() override;
+
+    //==========================================================================
+    // Parameter attachment
+    void attachLatencyParameter (std::atomic<float>* latency);
+
+    //==========================================================================
+    void setDeviceSelectorEnabled (bool shouldBeEnabled);
+    bool isDeviceSelectorEnabled() const;
+
+private:
+    DeviceSettingsView deviceSettings;
+    Viewport devicePanelViewport;
 };

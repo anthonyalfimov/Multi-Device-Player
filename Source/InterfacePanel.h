@@ -21,21 +21,19 @@ class InterfacePanel  : public Component
 public:
     InterfacePanel() = default;
 
-    void paint (Graphics& g) override;
-
     //==========================================================================
     // Interface constants
     static inline constexpr int padding = 12;
 
-protected:
-    //==========================================================================
-    // Interface constants
     static inline constexpr int buttonHeight = 25;
     static inline constexpr int buttonWidth = 100;
 
     static inline constexpr float corner = 5.0f;
     static inline constexpr float line = 2.0f;
 
+protected:
+    //==========================================================================
+    // Interface fonts
     const Font headingFont { 18, Font::plain };
 
     //==========================================================================

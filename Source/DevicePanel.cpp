@@ -11,8 +11,10 @@
 #include "DevicePanel.h"
 
 //==============================================================================
-DevicePanel::DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked,
-                          AudioFilePlayer& syncPlayer, double maxLatencyInMs)
+DeviceSettingsView::DeviceSettingsView (AudioDeviceManager& main,
+                                        AudioDeviceManager& linked,
+                                        AudioFilePlayer& syncPlayer,
+                                        double maxLatencyInMs)
     : mainDeviceManager (main),
       mainSelectorPanel (mainDeviceManager, 0, 0, 2, 2, false, false, true, false),
       linkedDeviceManager (linked),
@@ -21,15 +23,21 @@ DevicePanel::DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked,
 {
     //==========================================================================
     // Audio device section
-    addAndMakeVisible (devicePanelLabel);
-    devicePanelLabel.setFont (headingFont);
     const auto headingColour
     = getLookAndFeel().findColour (AppLookAndFeel::headingColourId);
-    devicePanelLabel.setColour (Label::textColourId, headingColour);
-    devicePanelLabel.setText("Audio Output Configuration", dontSendNotification);
+
+    addAndMakeVisible (mainDeviceLabel);
+    mainDeviceLabel.setFont (headingFont);
+    mainDeviceLabel.setColour (Label::textColourId, headingColour);
+    mainDeviceLabel.setText("Primary Output Device", dontSendNotification);
 
     addAndMakeVisible (mainSelectorPanel);
     mainSelectorPanel.addComponentListener (this);
+
+    addAndMakeVisible (linkedDeviceLabel);
+    linkedDeviceLabel.setFont (headingFont);
+    linkedDeviceLabel.setColour (Label::textColourId, headingColour);
+    linkedDeviceLabel.setText("Secondary Output Device", dontSendNotification);
 
     addAndMakeVisible (linkedSelectorPanel);
     linkedSelectorPanel.addComponentListener (this);
@@ -40,23 +48,12 @@ DevicePanel::DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked,
 }
 
 //==============================================================================
-void DevicePanel::paint (Graphics& g)
-{
-    auto bounds = getLocalBounds().reduced (padding / 2).toFloat();
-
-    auto bgColour = getLookAndFeel().findColour (ResizableWindow::backgroundColourId);
-    g.setColour (bgColour.darker (0.2f));
-
-    g.fillRoundedRectangle (bounds, corner);
-    g.drawRoundedRectangle (bounds, corner, line);
-}
-
-void DevicePanel::resized()
+void DeviceSettingsView::resized()
 {
     //==========================================================================
     // Manage panel hight
     int requiredHeight = mainSelectorPanel.getHeight() + linkedSelectorPanel.getHeight()
-                       + latencyPanel.getHeight() + (buttonHeight + padding)
+                       + latencyPanel.getHeight() + 2 * (buttonHeight + padding)
                        + 3 * padding;
     setSize (getWidth(), requiredHeight);
 
@@ -65,13 +62,16 @@ void DevicePanel::resized()
 
     //==========================================================================
     // Audio device section
-    devicePanelLabel.setBounds (bounds.removeFromTop (buttonHeight + padding)
-                                      .withTrimmedTop (padding)
-                                      .withTrimmedLeft (padding));
-
+    mainDeviceLabel.setBounds (bounds.removeFromTop (buttonHeight + padding)
+                                     .withTrimmedTop (padding)
+                                     .withTrimmedLeft (padding));
     bounds.removeFromTop (padding);   // add spacing
-
     mainSelectorPanel.setBounds (bounds.removeFromTop (mainSelectorPanel.getHeight()));
+
+    linkedDeviceLabel.setBounds (bounds.removeFromTop (buttonHeight + padding)
+                                       .withTrimmedTop (padding)
+                                       .withTrimmedLeft (padding));
+    bounds.removeFromTop (padding);   // add spacing
     linkedSelectorPanel.setBounds (bounds.removeFromTop (linkedSelectorPanel
                                                          .getHeight()));
 
@@ -81,28 +81,68 @@ void DevicePanel::resized()
 }
 
 //==============================================================================
-void DevicePanel::attachLatencyParameter (std::atomic<float>* latency)
+void DeviceSettingsView::attachLatencyParameter (std::atomic<float>* latency)
 {
     latencyPanel.attachLatencyParameter (latency);
 }
 
 //==============================================================================
-void DevicePanel::setDeviceSelectorEnabled (bool shouldBeEnabled)
+void DeviceSettingsView::setDeviceSelectorEnabled (bool shouldBeEnabled)
 {
     mainSelectorPanel.setEnabled (shouldBeEnabled);
     linkedSelectorPanel.setEnabled (shouldBeEnabled);
 }
 
-bool DevicePanel::isDeviceSelectorEnabled() const
+bool DeviceSettingsView::isDeviceSelectorEnabled() const
 {
     return mainSelectorPanel.isEnabled() && linkedSelectorPanel.isEnabled();
 }
 
 //==============================================================================
-void DevicePanel::componentMovedOrResized (Component& component,
-                                           bool wasMoved,
-                                           bool wasResized)
+void DeviceSettingsView::componentMovedOrResized (Component& component,
+                                                  bool wasMoved,
+                                                  bool wasResized)
 {
     if (wasResized)
         resized();
+}
+
+//==============================================================================
+DevicePanel::DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked,
+                          AudioFilePlayer& syncPlayer, double maxLatencyInMs)
+    : deviceSettings (main, linked, syncPlayer, maxLatencyInMs)
+{
+    addAndMakeVisible (devicePanelViewport);
+    devicePanelViewport.setViewedComponent (&deviceSettings, false);
+    devicePanelViewport.setScrollBarsShown (true, false);
+}
+
+//==============================================================================
+void DevicePanel::resized()
+{
+    deviceSettings.resized();
+
+    const auto bounds = getLocalBounds();
+    devicePanelViewport.setBounds (bounds);
+    deviceSettings.setSize (bounds.getWidth(), deviceSettings.getHeight());
+
+//    if (devicePanelViewport.getViewHeight() < devicePanel->getHeight())
+//        devicePanelViewport.setBounds (bounds.withTrimmedRight (-3));
+}
+
+//==============================================================================
+void DevicePanel::attachLatencyParameter (std::atomic<float>* latency)
+{
+    deviceSettings.attachLatencyParameter (latency);
+}
+
+//==============================================================================
+void DevicePanel::setDeviceSelectorEnabled (bool shouldBeEnabled)
+{
+    deviceSettings.setDeviceSelectorEnabled (shouldBeEnabled);
+}
+
+bool DevicePanel::isDeviceSelectorEnabled() const
+{
+    return deviceSettings.isDeviceSelectorEnabled();
 }

@@ -52,7 +52,8 @@ LatencyPanel::LatencyPanel (AudioFilePlayer& player, double maxLatencyInMs)
     // Latency slider
     addAndMakeVisible (latencySlider);
     addAndMakeVisible (latencySliderLabel);
-    latencySlider.setTextBoxStyle (Slider::TextBoxRight, false, 100, 20);
+    latencySlider.setTextBoxStyle (Slider::TextBoxRight, false,
+                                   buttonWidth, buttonHeight);
     latencySlider.setDoubleClickReturnValue (true, 0.0);
     latencySlider.setScrollWheelEnabled (false);
     latencySlider.setRange ({ -maxLatencyInMs, maxLatencyInMs }, 1.0);
@@ -66,23 +67,21 @@ void LatencyPanel::resized()
     int requiredHeight = 3 * (buttonHeight + padding) + padding;
     setSize (getWidth(), requiredHeight);
 
-    // Set control bounds
-    auto bounds = getLocalBounds();
+    auto bounds = getLocalBounds().reduced (padding);   // get usable bounds
 
-    latencyPanelLabel.setBounds (bounds.removeFromTop (buttonHeight + padding)
-                                       .withTrimmedTop (padding)
-                                       .withTrimmedLeft (padding));
+    // Section label:
+    latencyPanelLabel.setBounds (bounds.removeFromTop (buttonHeight));
 
-    syncTrackButton.setBounds (bounds.removeFromTop (buttonHeight + padding)
-                                     .withTrimmedTop (padding)
-                                     .withTrimmedLeft (padding)
+    // Sync Track button:
+    bounds.removeFromTop (padding);     // add spacing
+    syncTrackButton.setBounds (bounds.removeFromTop (buttonHeight)
                                      .withWidth (2 * buttonWidth + padding));
 
+    // Latency slider:
+    bounds.removeFromTop (padding);     // add spacing
     setSliderBounds (latencySlider,
                      latencySliderLabel,
-                     bounds.removeFromTop (buttonHeight + padding)
-                           .withTrimmedTop (padding)
-                           .withTrimmedLeft (padding));
+                     bounds.removeFromTop (buttonHeight));
 }
 
 void LatencyPanel::attachLatencyParameter (std::atomic<float>* latency)

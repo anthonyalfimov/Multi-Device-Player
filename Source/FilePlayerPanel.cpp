@@ -100,49 +100,35 @@ FilePlayerPanel::FilePlayerPanel (AudioFilePlayer& player, AudioFormatManager& m
 void FilePlayerPanel::resized()
 {
     // Manage panel hight
-    int requiredHeight = 3 * (buttonHeight + padding) + 2 * padding;
+    const int requiredHeight = 3 * buttonHeight + 4 * padding;
     setSize (getWidth(), requiredHeight);
 
-    // Set control bounds
-    auto bounds = getLocalBounds().reduced (padding / 2);
+    auto bounds = getLocalBounds().reduced (padding);   // get usable bounds
 
     // Section label:
-    playerPanelLabel.setBounds (bounds.removeFromTop (buttonHeight + padding)
-                                .withTrimmedTop (padding)
-                                .withTrimmedLeft (padding));
+    playerPanelLabel.setBounds (bounds.removeFromTop (buttonHeight));
 
     // File management UI components:
-    auto fileManagementBounds = bounds.removeFromTop (buttonHeight + padding)
-        .withTrimmedTop (padding)
-        .withTrimmedLeft (padding);
+    bounds.removeFromTop (padding);     // add spacing
+    auto fileManagementBounds = bounds.removeFromTop (buttonHeight);
 
     auto fileButtonBounds = fileManagementBounds.removeFromLeft (buttonWidth);
     fileButton.setBounds (fileButtonBounds);
 
     fileManagementBounds.removeFromLeft (padding);   // add spacing
-
-    auto currentFileLabelBounds = fileManagementBounds.withTrimmedRight (padding);
-    currentFileLabel.setBounds (currentFileLabelBounds);
+    currentFileLabel.setBounds (fileManagementBounds);
 
     // Transport UI components:
-    auto transportButtonsBounds = bounds.removeFromTop (buttonHeight + padding)
-        .withTrimmedTop (padding)
-        .withTrimmedLeft (padding);
+    bounds.removeFromTop (padding);     // add spacing
+    auto transportButtonsBounds = bounds.removeFromTop (buttonHeight);
 
-    auto playButtonBounds = transportButtonsBounds.removeFromLeft (buttonWidth);
-    playButton.setBounds (playButtonBounds);
+    playButton.setBounds (transportButtonsBounds.removeFromLeft (buttonWidth));
 
     transportButtonsBounds.removeFromLeft (padding);    // add spacing
-
-    auto stopButtonBounds = transportButtonsBounds.removeFromLeft (buttonWidth);
-    stopButton.setBounds (stopButtonBounds);
+    stopButton.setBounds (transportButtonsBounds.removeFromLeft (buttonWidth));
 
     transportButtonsBounds.removeFromLeft (padding);    // add spacing
-
-    auto loopingToggleBounds = transportButtonsBounds.removeFromLeft (buttonWidth);
-    loopingToggle.setBounds (loopingToggleBounds);
-
-    transportButtonsBounds.removeFromRight (padding);   // add spacing
+    loopingToggle.setBounds (transportButtonsBounds.removeFromLeft (buttonWidth));
 
     transportInfo.setBounds (transportButtonsBounds.removeFromRight (buttonWidth));
 }

@@ -18,6 +18,5 @@ void InterfacePanel::setSliderBounds (Slider& sl, Label& lb, juce::Rectangle<int
     lb.setBounds (labelBounds);
 
     b.removeFromLeft (padding);
-    b.removeFromRight (padding);
     sl.setBounds (b);
 }

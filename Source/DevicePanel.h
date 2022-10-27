@@ -12,11 +12,11 @@
 
 #include <JuceHeader.h>
 #include "InterfacePanel.h"
+#include "OutputConfigPanel.h"
 #include "LatencyPanel.h"
 
 //==============================================================================
-class DeviceSettingsView  : public InterfacePanel,
-                            public ComponentListener
+class DeviceSettingsView  : public InterfacePanel
 {
 public:
     DeviceSettingsView (AudioDeviceManager& main, AudioDeviceManager& linked,
@@ -33,24 +33,9 @@ public:
     void setDeviceSelectorEnabled (bool shouldBeEnabled);
     bool isDeviceSelectorEnabled() const;
 
-    //==========================================================================
-    void componentMovedOrResized (Component&, bool wasMoved, bool wasResized) override;
-
 private:
-    Label devicePanelLabel;
-
-    //==========================================================================
-    // Audio ouput devices
-    Label mainDeviceLabel;
-    AudioDeviceManager& mainDeviceManager;
-    AudioDeviceSelectorComponent mainSelectorPanel;
-
-    Label linkedDeviceLabel;
-    AudioDeviceManager& linkedDeviceManager;
-    AudioDeviceSelectorComponent linkedSelectorPanel;
-
-    //==========================================================================
-    // Latency compensation panel
+    OutputConfigurationPanel mainDevicePanel;
+    OutputConfigurationPanel linkedDevicePanel;
     LatencyPanel latencyPanel;
 
     //==========================================================================
@@ -78,4 +63,7 @@ public:
 private:
     DeviceSettingsView deviceSettings;
     Viewport devicePanelViewport;
+
+    //==========================================================================
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DevicePanel)
 };

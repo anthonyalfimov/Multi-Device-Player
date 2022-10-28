@@ -74,7 +74,8 @@ void OutputConfigurationPanel::resized()
     if (showPhaseInvert)
     {
         bounds.removeFromTop (padding);     // add spacing
-        phaseInvert.setBounds (bounds.removeFromTop (buttonHeight));
+        phaseInvert.setBounds (bounds.removeFromTop (buttonHeight)
+                                     .withWidth (2 * buttonWidth));
     }
 
     // Device Selector:

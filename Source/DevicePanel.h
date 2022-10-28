@@ -16,7 +16,7 @@
 #include "LatencyPanel.h"
 
 //==============================================================================
-class DeviceSettingsView  : public InterfacePanel
+class DeviceSettingsView  : public Component
 {
 public:
     DeviceSettingsView (AudioDeviceManager& main, AudioDeviceManager& linked,

@@ -56,6 +56,7 @@ AppLookAndFeel::AppLookAndFeel()
     // Slider colours
     setColour (Slider::textBoxOutlineColourId, outlineColour);
     setColour (Slider::textBoxTextColourId, textColour);
+    setColour (Slider::textBoxBackgroundColourId, buttonOffColour);
     setColour (Slider::thumbColourId, headingColour);
     setColour (Slider::trackColourId, sliderTrackColour);
     setColour (Slider::backgroundColourId, sliderTrackColour.withAlpha (0.2f));

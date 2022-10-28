@@ -10,8 +10,6 @@
 
 #include "MultiDevicePlayer.h"
 
-// TODO: Consider handling input audio
-
 MultiDevicePlayer::MultiDevicePlayer (double maxLatencyInMs)
     : mainSource (*this, maxLatencyInMs), linkedSource (*this, maxLatencyInMs)
 {
@@ -64,6 +62,8 @@ void MultiDevicePlayer::resizeSharedBuffer (int numChannels)
         return;
 
     sharedBuffer.setSize (numChannels, bufferSize);
+    linkedSource.haltUntilBufferIsHalfFilled(); // start popping only after the buffer
+                                                // is sufficiently filled
 }
 
 //==============================================================================

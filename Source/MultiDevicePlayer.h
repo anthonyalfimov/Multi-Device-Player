@@ -131,6 +131,12 @@ private:
         */
         void updateResamplingRatio();
 
+        /** [Realtime] [Non-tread-safe]
+            Indicated that popping from the shared buffer should be halted
+            until the buffer is half-filled.
+         */
+        void haltUntilBufferIsHalfFilled() { waitForBufferToFill = true; }
+
     private:
         MultiDevicePlayer& owner;
         DelayAudioSource delay;

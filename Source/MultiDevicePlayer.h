@@ -26,16 +26,26 @@ public:
 
     //==========================================================================
     /** [Realtime] [Thread-safe]
-        Returns a pointer to the atomic latency compensation value. Latency
-        between Main and Linked devices is set in milliseconds.
+     Sets the atomic latency compensation value. Latency between Main and Linked
+     devices is defined in milliseconds.
 
-        If latency parameter is positive, the Main device will be delayed by
-        the given amount of milliseconds.
+     If latency parameter is positive, the Main device will be delayed by
+     the given amount of milliseconds.
 
-        If latency parameter is negative, the Linked device will be delayed
-        by an absolute value of the given time in milliseconds.
+     If latency parameter is negative, the Linked device will be delayed
+     by an absolute value of the given time in milliseconds.
     */
-    std::atomic<float>* getLatencyParameter() { return &latency; }
+    void setLatency (float newLatencyInMs) { latency.store (newLatencyInMs); }
+
+    /** [Realtime] [Thread-safe]
+     Sets main device playback gain atomic value.
+    */
+    void setMainGain (float newGain) { mainSourcePlayer.setGain (newGain); }
+
+    /** [Realtime] [Thread-safe]
+     Sets linked device playback gain atomic value.
+    */
+    void setLinkedGain (float newGain) { linkedSourcePlayer.setGain (newGain); }
 
     //==========================================================================
     // Device managers

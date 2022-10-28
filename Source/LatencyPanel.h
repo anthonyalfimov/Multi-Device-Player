@@ -18,14 +18,11 @@
 class LatencyPanel  : public InterfacePanel
 {
 public:
-    explicit LatencyPanel (AudioFilePlayer& player, double maxLatencyInMs);
+    LatencyPanel (AudioFilePlayer& player, double maxLatencyInMs,
+                  std::function<void (float)> latencySetter);
 
     //==========================================================================
     void resized() override;
-
-    //==========================================================================
-    // Parameter attachment
-    void attachLatencyParameter (std::atomic<float>* latency);
 
 private:
     AudioFilePlayer& syncPlayer;

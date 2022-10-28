@@ -17,8 +17,9 @@
 class OutputConfigurationPanel  : public InterfacePanel
 {
 public:
-    OutputConfigurationPanel (AudioDeviceManager& adm, StringRef outputName,
-                              bool showPhaseInvertOption = false);
+    OutputConfigurationPanel (StringRef outputName, AudioDeviceManager& adm,
+                              bool showPhaseInvertOption,
+                              std::function<void (float)> gainSetter);
 
     //==========================================================================
     void resized() override;

@@ -14,7 +14,7 @@
 #include "AppLookAndFeel.h"
 
 //==============================================================================
-/*
+/* TODO: Incorporate into the Look and Feel class
  */
 class InterfacePanel  : public Component
 {

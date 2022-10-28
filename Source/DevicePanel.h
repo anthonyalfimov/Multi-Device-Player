@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "MultiDevicePlayer.h"
 #include "InterfacePanel.h"
 #include "OutputConfigPanel.h"
 #include "LatencyPanel.h"
@@ -19,15 +20,11 @@
 class DeviceSettingsView  : public Component
 {
 public:
-    DeviceSettingsView (AudioDeviceManager& main, AudioDeviceManager& linked,
-                        AudioFilePlayer& syncPlayer, double maxLatencyInMs);
+    DeviceSettingsView (MultiDevicePlayer& multiDevice, AudioFilePlayer& syncPlayer,
+                        double maxLatencyInMs);
 
     //==========================================================================
     void resized() override;
-
-    //==========================================================================
-    // Parameter attachment
-    void attachLatencyParameter (std::atomic<float>* latency);
 
     //==========================================================================
     void setDeviceSelectorEnabled (bool shouldBeEnabled);
@@ -46,15 +43,11 @@ private:
 class DevicePanel  : public Component
 {
 public:
-    DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked,
-                 AudioFilePlayer& syncPlayer, double maxLatencyInMs);
+    DevicePanel (MultiDevicePlayer& multiDevice, AudioFilePlayer& syncPlayer,
+                 double maxLatencyInMs);
 
     //==========================================================================
     void resized() override;
-
-    //==========================================================================
-    // Parameter attachment
-    void attachLatencyParameter (std::atomic<float>* latency);
 
     //==========================================================================
     void setDeviceSelectorEnabled (bool shouldBeEnabled);

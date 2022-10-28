@@ -42,10 +42,7 @@ MainComponent::MainComponent() : audioOutput (maxLatencyInMs)
 
     //==========================================================================
     // Set up device panel
-    devicePanel = std::make_unique<DevicePanel> (audioOutput.mainDeviceManager,
-                                                 audioOutput.linkedDeviceManager,
-                                                 syncPlayer, maxLatencyInMs);
-    devicePanel->attachLatencyParameter (audioOutput.getLatencyParameter());
+    devicePanel = std::make_unique<DevicePanel> (audioOutput, syncPlayer, maxLatencyInMs);
     addAndMakeVisible (devicePanel.get());
 
     //==========================================================================

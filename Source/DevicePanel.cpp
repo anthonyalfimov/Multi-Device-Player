@@ -11,13 +11,15 @@
 #include "DevicePanel.h"
 
 //==============================================================================
-DeviceSettingsView::DeviceSettingsView (AudioDeviceManager& main,
-                                        AudioDeviceManager& linked,
+DeviceSettingsView::DeviceSettingsView (MultiDevicePlayer& mpd,
                                         AudioFilePlayer& syncPlayer,
                                         double maxLatencyInMs)
-    : mainDevicePanel (main, "Primary Output Device"),
-      linkedDevicePanel (linked, "Secondary Output Device", true),
-      latencyPanel (syncPlayer, maxLatencyInMs)
+    : mainDevicePanel ("Primary Output Device", mpd.mainDeviceManager, false,
+                       [&mpd] (float newGain) { mpd.setMainGain (newGain); }),
+      linkedDevicePanel ("Secondary Output Device", mpd.linkedDeviceManager, true,
+                         [&mpd] (float newGain) { mpd.setLinkedGain (newGain); }),
+      latencyPanel (syncPlayer, maxLatencyInMs,
+                    [&mpd] (float newLatency) { mpd.setLatency (newLatency); })
 {
     addAndMakeVisible (mainDevicePanel);
     addAndMakeVisible (linkedDevicePanel);
@@ -39,11 +41,6 @@ void DeviceSettingsView::resized()
     latencyPanel.setBounds (bounds.removeFromTop (latencyPanel.getHeight()));
 }
 
-void DeviceSettingsView::attachLatencyParameter (std::atomic<float>* latency)
-{
-    latencyPanel.attachLatencyParameter (latency);
-}
-
 void DeviceSettingsView::setDeviceSelectorEnabled (bool shouldBeEnabled)
 {
     mainDevicePanel.setDeviceSelectorEnabled (shouldBeEnabled);
@@ -57,9 +54,9 @@ bool DeviceSettingsView::isDeviceSelectorEnabled() const
 }
 
 //==============================================================================
-DevicePanel::DevicePanel (AudioDeviceManager& main, AudioDeviceManager& linked,
-                          AudioFilePlayer& syncPlayer, double maxLatencyInMs)
-    : deviceSettings (main, linked, syncPlayer, maxLatencyInMs)
+DevicePanel::DevicePanel (MultiDevicePlayer& multiDevice, AudioFilePlayer& syncPlayer,
+                          double maxLatencyInMs)
+    : deviceSettings (multiDevice, syncPlayer, maxLatencyInMs)
 {
     addAndMakeVisible (devicePanelViewport);
     devicePanelViewport.setViewedComponent (&deviceSettings, false);
@@ -73,11 +70,6 @@ void DevicePanel::resized()
     const auto bounds = getLocalBounds();
     devicePanelViewport.setBounds (bounds);
     deviceSettings.setSize (bounds.getWidth(), deviceSettings.getHeight());
-}
-
-void DevicePanel::attachLatencyParameter (std::atomic<float>* latency)
-{
-    deviceSettings.attachLatencyParameter (latency);
 }
 
 void DevicePanel::setDeviceSelectorEnabled (bool shouldBeEnabled)

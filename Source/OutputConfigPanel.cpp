@@ -11,9 +11,10 @@
 #include "OutputConfigPanel.h"
 
 //==============================================================================
-OutputConfigurationPanel::OutputConfigurationPanel (AudioDeviceManager& adm,
-                                                    StringRef outputName,
-                                                    bool showPhaseInvertOption)
+OutputConfigurationPanel::OutputConfigurationPanel (StringRef outputName,
+                                                    AudioDeviceManager& adm,
+                                                    bool showPhaseInvertOption,
+                                                    std::function<void (float)> setGain)
     : manager (adm),
       selectorPanel (adm, 0, 0, 2, 2, false, false, true, false),
       showPhaseInvert (showPhaseInvertOption)
@@ -44,12 +45,21 @@ OutputConfigurationPanel::OutputConfigurationPanel (AudioDeviceManager& adm,
     volumeSlider.setTextValueSuffix (" %");
     volumeSliderLabel.setText ("Volume", dontSendNotification);
 
+    auto setOutputGain = [this, setGain]()
+    {
+        const float absGain = static_cast<float> (volumeSlider.getValue() * 0.01);
+        setGain (absGain * (phaseInvert.getToggleState() ? -1 : 1));
+    };
+
+    volumeSlider.onValueChange = setOutputGain;
+
     //==========================================================================
     // Phase control
     if (showPhaseInvert)
     {
         addAndMakeVisible (phaseInvert);
         phaseInvert.setButtonText ("Invert Phase");
+        phaseInvert.onStateChange = setOutputGain;
     }
 }
 

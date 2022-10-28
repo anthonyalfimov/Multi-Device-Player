@@ -12,7 +12,8 @@
 #include "LatencyPanel.h"
 
 //==============================================================================
-LatencyPanel::LatencyPanel (AudioFilePlayer& player, double maxLatencyInMs)
+LatencyPanel::LatencyPanel (AudioFilePlayer& player, double maxLatencyInMs,
+                            std::function<void (float)> setLatency)
     : syncPlayer (player)
 {
     // Latency panel label:
@@ -59,6 +60,11 @@ LatencyPanel::LatencyPanel (AudioFilePlayer& player, double maxLatencyInMs)
     latencySlider.setRange ({ -maxLatencyInMs, maxLatencyInMs }, 1.0);
     latencySlider.setTextValueSuffix (" ms");
     latencySliderLabel.setText ("Latency", dontSendNotification);
+
+    latencySlider.onValueChange = [this, setLatency]
+    {
+        setLatency (static_cast<float> (latencySlider.getValue()));
+    };
 }
 
 void LatencyPanel::resized()
@@ -82,12 +88,4 @@ void LatencyPanel::resized()
     setSliderBounds (latencySlider,
                      latencySliderLabel,
                      bounds.removeFromTop (buttonHeight));
-}
-
-void LatencyPanel::attachLatencyParameter (std::atomic<float>* latency)
-{
-    latencySlider.onValueChange = [latency, this]
-    {
-        latency->store (static_cast<float> (latencySlider.getValue()));
-    };
 }

@@ -9,7 +9,7 @@
 namespace BinaryData
 {
     extern const char*   SyncTrack_wav;
-    const int            SyncTrack_wavSize = 3840730;
+    const int            SyncTrack_wavSize = 1920656;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
     const int namedResourceListSize = 1;

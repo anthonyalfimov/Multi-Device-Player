@@ -15,7 +15,7 @@
 #include "AudioFifoSource.h"
 #include "DelayAudioSource.h"
 
-class MultiDevicePlayer
+class MultiDevicePlayer  : private Timer
 {
 public:
     explicit MultiDevicePlayer (double maxLatencyInMs);
@@ -73,12 +73,24 @@ private:
     void resizeSharedBuffer (int numChannels = -1);
 
     //==========================================================================
+    // Audio device management
+    /** AudioDeviceManager is not always notified when the device sample rate
+        is changed. When a discrepancy like this is detected, this function
+        should be used to update AudioDeviceManager to the factual sample rate.
+    */
+    void resetAudioDevice (AudioDeviceManager& manager);
+    void timerCallback() override;
+
+    //==========================================================================
     // Objects for streaming audio from an audio source to managed devices
     AudioSourcePlayer mainSourcePlayer;
     AudioSourcePlayer linkedSourcePlayer;
 
     //==========================================================================
     // Audio sources for managed devices
+    // TODO: Extract a common base class
+    // TODO: Move internal class definitions to the *.cpp file
+
     class PushAudioSource  : public AudioSource
     {
     public:
@@ -95,6 +107,12 @@ private:
         //======================================================================
         double getSampleRate() const { return nominalSampleRate; }
         int getPushBlockSize() const { return blockSize; }
+
+        //======================================================================
+        /** Atomic flag that is set when the actual device settings do not
+         match its AudioDeviceManager settings
+         */
+        std::atomic<bool> needsAudioDeviceReset = false;
 
     private:
         MultiDevicePlayer& owner;
@@ -134,8 +152,13 @@ private:
         /** [Realtime] [Non-tread-safe]
             Indicated that popping from the shared buffer should be halted
             until the buffer is half-filled.
-         */
+        */
         void haltUntilBufferIsHalfFilled() { waitForBufferToFill = true; }
+
+        /** Atomic flag that is set when the actual device settings do not
+            match its AudioDeviceManager settings
+        */
+        std::atomic<bool> needsAudioDeviceReset = false;
 
     private:
         MultiDevicePlayer& owner;

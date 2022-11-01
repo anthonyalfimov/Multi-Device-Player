@@ -13,6 +13,9 @@
 MultiDevicePlayer::MultiDevicePlayer (double maxLatencyInMs)
     : mainSource (*this, maxLatencyInMs), linkedSource (*this, maxLatencyInMs)
 {
+    // Start checking if audio devices need to be reset:
+    startTimerHz (10);
+
     //==========================================================================
     // Check that atomic float is lock-free
     static_assert (std::atomic<float>::is_always_lock_free,
@@ -67,16 +70,38 @@ void MultiDevicePlayer::resizeSharedBuffer (int numChannels)
 }
 
 //==============================================================================
+void MultiDevicePlayer::resetAudioDevice (AudioDeviceManager& manager)
+{
+    auto setup = manager.getAudioDeviceSetup();
+    setup.sampleRate = manager.getCurrentAudioDevice()->getCurrentSampleRate();
+    manager.setAudioDeviceSetup (setup, true);
+}
+
+void MultiDevicePlayer::timerCallback()
+{
+    if (mainSource.needsAudioDeviceReset.load())
+        resetAudioDevice (mainDeviceManager);
+
+    if (linkedSource.needsAudioDeviceReset.load())
+        resetAudioDevice (linkedDeviceManager);
+}
+
+//==============================================================================
 MultiDevicePlayer::PushAudioSource::
     PushAudioSource (MultiDevicePlayer& mdp, double maxLatencyInMs)
         : owner (mdp), maxLatency (maxLatencyInMs)
 {
-    
+    //==========================================================================
+    // Check that atomic float is lock-free
+    static_assert (std::atomic<bool>::is_always_lock_free,
+                   "std::atomic for type bool must be always lock free");
 }
 
 void MultiDevicePlayer::PushAudioSource::
         prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
+    needsAudioDeviceReset.store (false);
+
     if (source != nullptr)
         source->prepareToPlay (samplesPerBlockExpected, sampleRate);
 
@@ -102,6 +127,16 @@ void MultiDevicePlayer::PushAudioSource::
 void MultiDevicePlayer::PushAudioSource::
         getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
+    // Check that device sample rate hasn't been externally changed
+    if (owner.mainDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate()
+        != nominalSampleRate)
+    {
+        bufferToFill.clearActiveBufferRegion();
+        needsAudioDeviceReset.store (true);
+        DBG ("Main device: sample rate mismatch");
+        return;
+    }
+
     // Process audio and push it to the shared buffer
     if (source != nullptr)
         source->getNextAudioBlock (bufferToFill);
@@ -168,12 +203,17 @@ MultiDevicePlayer::PopAudioSource::
     PopAudioSource (MultiDevicePlayer& mdp, double maxLatencyInMs)
         : owner (mdp), maxLatency (maxLatencyInMs)
 {
-
+    //==========================================================================
+    // Check that atomic float is lock-free
+    static_assert (std::atomic<bool>::is_always_lock_free,
+                   "std::atomic for type bool must be always lock free");
 }
 
 void MultiDevicePlayer::PopAudioSource::
         prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
+    needsAudioDeviceReset.store (false);
+
     const int numChannels = owner.linkedDeviceManager
         .getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
     delay.setDelayBufferSize (numChannels, maxLatency);
@@ -200,6 +240,16 @@ void MultiDevicePlayer::PopAudioSource::
 void MultiDevicePlayer::PopAudioSource::
         getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
+    // Check that device sample rate hasn't been externally changed
+    if (owner.linkedDeviceManager.getCurrentAudioDevice()->getCurrentSampleRate()
+        != nominalSampleRate)
+    {
+        bufferToFill.clearActiveBufferRegion();
+        needsAudioDeviceReset.store (true);
+        DBG ("Linked device: sample rate mismatch");
+        return;
+    }
+
     // Pop audio from the shared buffer
     {
         SpinLock::ScopedTryLockType popLock (owner.popMutex);

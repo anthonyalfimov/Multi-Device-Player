@@ -133,7 +133,6 @@ void MultiDevicePlayer::PushAudioSource::
     {
         bufferToFill.clearActiveBufferRegion();
         needsAudioDeviceReset.store (true);
-        DBG ("Main device: sample rate mismatch");
         return;
     }
 
@@ -246,7 +245,6 @@ void MultiDevicePlayer::PopAudioSource::
     {
         bufferToFill.clearActiveBufferRegion();
         needsAudioDeviceReset.store (true);
-        DBG ("Linked device: sample rate mismatch");
         return;
     }
 

@@ -88,9 +88,6 @@ private:
 
     //==========================================================================
     // Audio sources for managed devices
-    // TODO: Extract a common base class
-    // TODO: Move internal class definitions to the *.cpp file
-
     class PushAudioSource  : public AudioSource
     {
     public:

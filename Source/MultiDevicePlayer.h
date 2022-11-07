@@ -94,6 +94,9 @@ private:
         PushAudioSource (MultiDevicePlayer& mdp, double maxLatencyInMs);
 
         //======================================================================
+        /** [Realtime] [Non-tread-safe]
+            ...
+        */
         void setSource (AudioSource* src) { source = src; }
 
         //======================================================================
@@ -106,19 +109,38 @@ private:
         int getPushBlockSize() const { return blockSize; }
 
         //======================================================================
+        /** [Non-realtime] [Non-tread-safe]
+            Initialise the internal delay buffer for latency compensation.
+
+            Make sure this method is called only after the members
+            `blockSize`, `numChannels`, and `nominalSampleRate` have been set.
+        */
+        void prepareLatencyCompensation (int sharedBufferSize);
+
         /** Atomic flag that is set when the actual device settings do not
-         match its AudioDeviceManager settings
-         */
+            match its AudioDeviceManager settings
+        */
         std::atomic<bool> needsAudioDeviceReset = false;
 
     private:
         MultiDevicePlayer& owner;
         DelayAudioSource delay;
-        const double maxLatency;
+        const double maxLatencyDelayInMs;
+
+        /*  Linked device will wait until half of the shared buffer is filled
+            before starting playback. Therefore, main device will be ahead of
+            the linked device by half the shared buffer size on average.
+            The `fixedDelay` value is added to compensate for this latency.
+        */
+        int fixedDelay = 0;
+
+        //======================================================================
         AudioSource* source = nullptr;
 
         bool waitForBufferSpace = false;
 
+        //======================================================================
+        int numChannels = 2;
         double nominalSampleRate = 44100.0;
         int blockSize = 32;
 
@@ -160,14 +182,17 @@ private:
     private:
         MultiDevicePlayer& owner;
         DelayAudioSource delay;
-        const double maxLatency;
+        const double maxLatencyDelayInMs;
 
+        //======================================================================
         bool waitForBufferToFill = true;
 
+        //======================================================================
         double nominalSampleRate = 44100.0;
         int blockSize = 32;
         int popBlockSize = 32;
 
+        //======================================================================
         AudioFifoSource sharedBufferSource { owner.sharedBuffer };
         std::unique_ptr<ResamplingAudioSource> resampler;
 

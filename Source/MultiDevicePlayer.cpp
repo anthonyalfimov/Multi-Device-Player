@@ -57,6 +57,8 @@ void MultiDevicePlayer::resizeSharedBuffer (int numChannels)
     const int bufferSize = 6 * jmax (mainSource.getPushBlockSize(),
                                      linkedSource.getPopBlockSize());
 
+    mainSource.prepareLatencyCompensation (bufferSize);
+
     if (numChannels < 0)
         numChannels = sharedBuffer.getNumChannels();
 
@@ -65,8 +67,10 @@ void MultiDevicePlayer::resizeSharedBuffer (int numChannels)
         return;
 
     sharedBuffer.setSize (numChannels, bufferSize);
-    linkedSource.haltUntilBufferIsHalfFilled(); // start popping only after the buffer
-                                                // is sufficiently filled
+
+    // Linked device should start popping from the shared buffer only after
+    //  it has been sufficiently filled
+    linkedSource.haltUntilBufferIsHalfFilled();
 }
 
 //==============================================================================
@@ -89,7 +93,7 @@ void MultiDevicePlayer::timerCallback()
 //==============================================================================
 MultiDevicePlayer::PushAudioSource::
     PushAudioSource (MultiDevicePlayer& mdp, double maxLatencyInMs)
-        : owner (mdp), maxLatency (maxLatencyInMs)
+        : owner (mdp), maxLatencyDelayInMs (maxLatencyInMs)
 {
     //==========================================================================
     // Check that atomic float is lock-free
@@ -105,17 +109,14 @@ void MultiDevicePlayer::PushAudioSource::
     if (source != nullptr)
         source->prepareToPlay (samplesPerBlockExpected, sampleRate);
 
-    const int numChannels = owner.mainDeviceManager
-        .getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
-    delay.setDelayBufferSize (numChannels, maxLatency);
-    delay.prepareToPlay (samplesPerBlockExpected, sampleRate);
-
     {
         SpinLock::ScopedLockType popLock (owner.popMutex);
         SpinLock::ScopedLockType resizeLock (owner.resizeMutex);
 
-        blockSize = samplesPerBlockExpected;
+        numChannels = owner.mainDeviceManager
+            .getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
         nominalSampleRate = sampleRate;
+        blockSize = samplesPerBlockExpected;
 
         // NB! Always update the resampling ratio before resizing the shared
         //     buffer because pop block size depends on the ratio.
@@ -182,9 +183,10 @@ void MultiDevicePlayer::PushAudioSource::
     const float latencyValue = owner.latency.load();
 
     if (latencyValue > 0.0)
-        delay.setDelayInMs (latencyValue);
+        delay.setDelay (roundToInt (nominalSampleRate * 0.001 * latencyValue)
+                        + fixedDelay);
     else
-        delay.setDelayInMs (0.0f);
+        delay.setDelay (fixedDelay);
 
     delay.getNextAudioBlock (bufferToFill);
 }
@@ -197,10 +199,21 @@ void MultiDevicePlayer::PushAudioSource::releaseResources()
     delay.releaseResources();
 }
 
+void MultiDevicePlayer::PushAudioSource::
+        prepareLatencyCompensation (int sharedBufferSize)
+{
+    fixedDelay = sharedBufferSize / 2;
+
+    const int maxDelayInSamples
+    = roundToInt (nominalSampleRate * 0.001 * maxLatencyDelayInMs) + fixedDelay;
+    delay.setDelayBufferSize (numChannels, maxDelayInSamples);
+    delay.prepareToPlay (blockSize, nominalSampleRate);
+}
+
 //==============================================================================
 MultiDevicePlayer::PopAudioSource::
     PopAudioSource (MultiDevicePlayer& mdp, double maxLatencyInMs)
-        : owner (mdp), maxLatency (maxLatencyInMs)
+        : owner (mdp), maxLatencyDelayInMs (maxLatencyInMs)
 {
     //==========================================================================
     // Check that atomic float is lock-free
@@ -215,7 +228,9 @@ void MultiDevicePlayer::PopAudioSource::
 
     const int numChannels = owner.linkedDeviceManager
         .getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
-    delay.setDelayBufferSize (numChannels, maxLatency);
+
+    delay.setDelayBufferSize (numChannels,
+                              roundToInt (sampleRate * 0.001 * maxLatencyDelayInMs));
     delay.prepareToPlay (samplesPerBlockExpected, sampleRate);
 
     {
@@ -301,9 +316,9 @@ void MultiDevicePlayer::PopAudioSource::
     const float latencyValue = owner.latency.load();
 
     if (latencyValue < 0.0)
-        delay.setDelayInMs (-latencyValue);
+        delay.setDelay (roundToInt (nominalSampleRate * 0.001 * -latencyValue));
     else
-        delay.setDelayInMs (0.0f);
+        delay.setDelay (0);
 
     delay.getNextAudioBlock (bufferToFill);
 }

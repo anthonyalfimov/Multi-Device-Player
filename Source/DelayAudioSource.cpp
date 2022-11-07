@@ -10,44 +10,34 @@
 
 #include "DelayAudioSource.h"
 
-DelayAudioSource::DelayAudioSource (int numChannels, double maxDelayInMs)
+DelayAudioSource::DelayAudioSource (int numChannels, int maxDelayInSamples)
 {
-    setDelayBufferSize (numChannels, maxDelayInMs);
+    setDelayBufferSize (numChannels, maxDelayInSamples);
 }
 
 //==============================================================================
-void DelayAudioSource::setDelayBufferSize (int numChannels, double maxDelayInMs)
+void DelayAudioSource::setDelayBufferSize (int numChannels, int maxDelayInSamples)
 {
-    mNumChannels = numChannels;
-    mMaxDelayInMs = maxDelayInMs;
+    channels = numChannels;
+    maxDelay = maxDelayInSamples;
 
     bufferResizePending = true;
 }
 
 //==============================================================================
-void DelayAudioSource::setDelayInMs (float delayInMs)
+void DelayAudioSource::setDelay (int delayInSamples)
 {
-    delaySmoothed.setTargetValue (mSampleRate * 0.001 * delayInMs);
-}
-
-void DelayAudioSource::setDelayInSamples (int delayInSamples)
-{
-    delaySmoothed.setTargetValue (delayInSamples);
+    delaySmoothed.setTargetValue (jmin (delayInSamples, maxDelay));
 }
 
 //==============================================================================
 void DelayAudioSource::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
-    mSampleRate = sampleRate;
-
-    const dsp::ProcessSpec spec { mSampleRate,
+    const dsp::ProcessSpec spec { sampleRate,
                                   static_cast<uint32> (samplesPerBlockExpected),
-                                  static_cast<uint32> (mNumChannels) };
+                                  static_cast<uint32> (channels) };
     delayBuffer.prepare (spec);
-
-    const int maxDelayInSamples
-    = static_cast<int> (mSampleRate * 0.001 * mMaxDelayInMs) + 1;
-    delayBuffer.setMaximumDelayInSamples (maxDelayInSamples);
+    delayBuffer.setMaximumDelayInSamples (maxDelay + 1);
 
     bufferResizePending = false;
 
@@ -58,7 +48,7 @@ void DelayAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& bufferTo
 {
     jassert (! bufferResizePending);
 
-    const int numChannels = jmin (mNumChannels, bufferToFill.buffer->getNumChannels());
+    const int numChannels = jmin (channels, bufferToFill.buffer->getNumChannels());
 
     const auto** inBuffer = bufferToFill.buffer->getArrayOfReadPointers();
     auto** outBuffer = bufferToFill.buffer->getArrayOfWritePointers();

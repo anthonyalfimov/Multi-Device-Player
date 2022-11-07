@@ -25,7 +25,7 @@ public:
 
     /** Creates a DelayAudioSource and sets its delay buffer size.
     */
-    DelayAudioSource (int numChannels, double maxDelayInMs);
+    DelayAudioSource (int numChannels, int maxDelayInSamples);
 
     //==========================================================================
     /** [Realtime] [Non-thread-safe]
@@ -36,7 +36,7 @@ public:
         this method must be called before the first prepareToPlay() call.
         Otherwise default values for the buffer size will be used.
     */
-    void setDelayBufferSize (int numChannels, double maxDelayInMs);
+    void setDelayBufferSize (int numChannels, int maxDelayInSamples);
 
     /** [Realtime] [Non-thread-safe]
         Returns true when internal delay buffer has been resized to the
@@ -45,8 +45,7 @@ public:
     bool isDelayBufferReady() const { return ! bufferResizePending; }
 
     //==========================================================================
-    void setDelayInMs (float delayInMs);
-    void setDelayInSamples (int delayInSamples);
+    void setDelay (int delayInSamples);
 
     //==========================================================================
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
@@ -54,9 +53,8 @@ public:
     void releaseResources() override;
 
 private:
-    double mSampleRate = 44100.0;
-    int mNumChannels = 2;
-    double mMaxDelayInMs = 100.0;
+    int channels = 2;
+    int maxDelay = 512;
 
     bool bufferResizePending = true;
 

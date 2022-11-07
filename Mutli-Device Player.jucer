@@ -2,11 +2,13 @@
 
 <JUCERPROJECT id="RTeoJQ" name="Mutli-Device Player" projectType="guiapp" useAppConfig="0"
               addUsingNamespaceToJuceHeader="1" jucerFormatVersion="1" version="0.1.0"
-              companyName="Weird Numbers" companyCopyright="Copyright (c) 2022 Anthony Alfimov"
+              companyName="Anthony Alfimov" companyCopyright="Copyright (c) 2022 Anthony Alfimov"
               companyWebsite="https://github.com/anthonyalfimov" cppLanguageStandard="17">
   <MAINGROUP id="EFDvI3" name="Mutli-Device Player">
     <GROUP id="{5914D1D9-82E5-BDAD-599A-AAC6478EA1C6}" name="Assets">
       <FILE id="cDKm8q" name="SyncTrack.wav" compile="0" resource="1" file="Assets/SyncTrack.wav"/>
+      <FILE id="xUkfrC" name="app_icon_512x512@2x.png" compile="0" resource="1"
+            file="Assets/app_icon_512x512@2x.png"/>
     </GROUP>
     <GROUP id="{4800FE7F-C5DD-B402-BE7D-E1E16B05642C}" name="Configuration">
       <FILE id="KJyGas" name="AppLookAndFeel.cpp" compile="1" resource="0"
@@ -61,7 +63,7 @@
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_USE_LAME_AUDIO_FORMAT="1"
                JUCE_USE_WINDOWS_MEDIA_FORMAT="1" JUCE_USE_FLAC="1" JUCE_USE_OGGVORBIS="1"/>
   <EXPORTFORMATS>
-    <VS2022 targetFolder="Builds/VisualStudio2022">
+    <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="xUkfrC" bigIcon="xUkfrC">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="Mutli-Device Player"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="Mutli-Device Player"/>
@@ -81,10 +83,12 @@
         <MODULEPATH id="juce_gui_extra" path="../../../libs/JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
-    <XCODE_MAC targetFolder="Builds/MacOSX">
+    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="xUkfrC" bigIcon="xUkfrC">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="Mutli-Device Player"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="Mutli-Device Player"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Mutli-Device Player" macOSDeploymentTarget="10.13"
+                       osxCompatibility="10.13 SDK"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="Mutli-Device Player" macOSDeploymentTarget="10.13"
+                       osxCompatibility="10.13 SDK"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../../libs/JUCE/modules"/>

@@ -11,8 +11,11 @@ namespace BinaryData
     extern const char*   SyncTrack_wav;
     const int            SyncTrack_wavSize = 1920656;
 
+    extern const char*   app_icon_512x5122x_png;
+    const int            app_icon_512x5122x_pngSize = 546538;
+
     // Number of elements in the namedResourceList and originalFileNames arrays.
-    const int namedResourceListSize = 1;
+    const int namedResourceListSize = 2;
 
     // Points to the start of a list of resource names.
     extern const char* namedResourceList[];

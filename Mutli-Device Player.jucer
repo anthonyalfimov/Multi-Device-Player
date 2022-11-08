@@ -83,7 +83,8 @@
         <MODULEPATH id="juce_gui_extra" path="../../../libs/JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
-    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="xUkfrC" bigIcon="xUkfrC">
+    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="xUkfrC" bigIcon="xUkfrC"
+               hardenedRuntime="1">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="Mutli-Device Player" macOSDeploymentTarget="10.13"
                        osxCompatibility="10.13 SDK"/>

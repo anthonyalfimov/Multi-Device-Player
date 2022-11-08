@@ -64,4 +64,8 @@ AppLookAndFeel::AppLookAndFeel()
     // Scrollbar colours
     setColour (ScrollBar::thumbColourId, backgroundColour.brighter());
 
+    // ListBox colours
+    setColour (ListBox::backgroundColourId, buttonOffColour);
+    setColour (ListBox::outlineColourId, outlineColour);
+    setColour (ListBox::textColourId, textColour);
 }

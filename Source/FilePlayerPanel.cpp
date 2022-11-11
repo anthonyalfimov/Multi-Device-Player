@@ -152,11 +152,7 @@ void FilePlayerPanel::fileButtonClicked()
         if (file == File())         // if invalid file, abort
             return;
 
-        // TODO: We're not supporting mp3, add warning (or add support)
-
-        auto* reader = formatManager.createReaderFor (file);
-
-        filePlayer.setAudioFormatReader (reader);
+        filePlayer.setAudioFormatReader (formatManager.createReaderFor (file));
 
         playButton.setEnabled (true);
         currentFileLabel.setText ("File: " + file.getFileName(), dontSendNotification);

@@ -12,8 +12,7 @@
 
 #include <JuceHeader.h>
 
-// TODO: Pre-buffer the file that is playing?
-// TODO: Examine thread-safety of this class (use thread sanitiser?)
+// TODO: Pre-buffer the file that is playing
 
 class AudioFilePlayer  : public AudioSource,
                          public ChangeListener
@@ -35,13 +34,13 @@ public:
     // Player transport controls
     void playPause();
     void stop();
-    void setLooping (bool shouldLoop);
+    void setLooping (bool shouldLoop) { looping.store (shouldLoop); }
 
     //==========================================================================
     // Player transport state
     bool isPlaying() const { return transportSource.isPlaying(); }
     bool isLooping() const { return transportSource.isLooping(); }
-    double getCurrentPosition() const { return transportSource.getCurrentPosition(); }
+    double getCurrentPosition() const;
 
     //==========================================================================
     // Transport state change callbacks
@@ -66,12 +65,14 @@ private:
 
     void changeState (TransportState newState);
 
-    bool looping = false;
+    std::atomic<bool> looping = false;
     bool shouldFadeIn = true;
 
     std::unique_ptr<AudioFormatReaderSource> readerSource;
     AudioTransportSource transportSource;
     TransportState state = TransportState::Stopped;
+
+    SpinLock readerLoopingMutex;
 
     //==========================================================================
     // Change listener callback

@@ -13,6 +13,11 @@
 AudioFilePlayer::AudioFilePlayer()
 {
     transportSource.addChangeListener (this);
+
+    //==========================================================================
+    // Check that atomic bool is lock-free
+    static_assert (std::atomic<bool>::is_always_lock_free,
+                   "std::atomic for type bool must be always lock free");
 }
 
 //==============================================================================
@@ -24,17 +29,18 @@ void AudioFilePlayer::setAudioFormatReader (AudioFormatReader* reader)
     // Pass reader ownership to newSource:
     auto newSource = std::make_unique<AudioFormatReaderSource> (reader, true);
 
-    // Set input source for the transportSource object:
-    transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
+    {
+        SpinLock::ScopedLockType readerLoopingLock (readerLoopingMutex);
 
-    // Transfer memory ownership of the audio source to readerSource ptr:
-    readerSource.reset (newSource.release());
+        // Set input source for the transportSource object:
+        transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
 
-    // Update looping status of the new readerSource:
-    readerSource->setLooping (looping);
+        // Transfer memory ownership of the audio source to readerSource ptr:
+        readerSource.reset (newSource.release());
 
-    // Stop transport:
-    changeState (TransportState::Stopped);
+        // Update transport state:
+        changeState (TransportState::Stopped);
+    }
 }
 
 //==========================================================================
@@ -45,10 +51,11 @@ void AudioFilePlayer::prepareToPlay (int samplesPerBlockExpected, double sampleR
 
 void AudioFilePlayer::getNextAudioBlock (const AudioSourceChannelInfo& info)
 {
-    if (readerSource == nullptr)
     {
-        info.clearActiveBufferRegion();
-        return;
+        SpinLock::ScopedTryLockType readerLoopingLock (readerLoopingMutex);
+
+        if (readerLoopingLock.isLocked() && readerSource != nullptr)
+            readerSource->setLooping (looping.load());
     }
 
     transportSource.getNextAudioBlock (info);
@@ -93,12 +100,12 @@ void AudioFilePlayer::stop()
         changeState (TransportState::Stopping);
 }
 
-void AudioFilePlayer::setLooping (bool shouldLoop)
+//==============================================================================
+double AudioFilePlayer::getCurrentPosition() const
 {
-    looping = shouldLoop;
-
-    if (readerSource.get() != nullptr)
-        readerSource->setLooping (looping);
+    // getCurrentPosition() method accesses readerSource, so we need to lock:
+    SpinLock::ScopedLockType readerLoopingLock (readerLoopingMutex);
+    return transportSource.getCurrentPosition();
 }
 
 //==============================================================================

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="RTeoJQ" name="Mutli-Device Player" projectType="guiapp" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="1" jucerFormatVersion="1" version="0.1.0"
+              addUsingNamespaceToJuceHeader="1" jucerFormatVersion="1" version="0.1.1"
               companyName="Anthony Alfimov" companyCopyright="Copyright (c) 2022 Anthony Alfimov"
               companyWebsite="https://github.com/anthonyalfimov" cppLanguageStandard="17">
   <MAINGROUP id="EFDvI3" name="Mutli-Device Player">

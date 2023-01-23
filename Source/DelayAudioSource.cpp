@@ -50,8 +50,8 @@ void DelayAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& bufferTo
 
     const int numChannels = jmin (channels, bufferToFill.buffer->getNumChannels());
 
-    const auto** inBuffer = bufferToFill.buffer->getArrayOfReadPointers();
-    auto** outBuffer = bufferToFill.buffer->getArrayOfWritePointers();
+    const auto inBuffer = bufferToFill.buffer->getArrayOfReadPointers();
+    auto outBuffer = bufferToFill.buffer->getArrayOfWritePointers();
 
     const auto startSample = bufferToFill.startSample;
     const auto endSample = startSample + bufferToFill.numSamples;
